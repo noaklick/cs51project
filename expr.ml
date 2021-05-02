@@ -88,12 +88,57 @@ let subst (var_name : varid) (repl : expr) (exp : expr) : expr =
   String representations of expressions
  *)
    
+
 (* exp_to_concrete_string exp -- Returns a string representation of
    the concrete syntax of the expression `exp` *)
-let exp_to_concrete_string (exp : expr) : string =
-  failwith "exp_to_concrete_string not implemented" ;;
+
+let rec exp_to_concrete_string (exp : expr) : string =
+
+  let concrete_binop (x : expr) (y : expr) (bin : string) : string =
+    (exp_to_concrete_string x) ^ bin ^ (exp_to_concrete_string y)
+  in
+
+  match exp with
+  | Var x -> x
+  | Num x -> string_of_int x
+  | Bool x -> string_of_bool x
+  | Unop (Negate, y) -> "~" ^ (exp_to_concrete_string y)
+  | Binop (b, x, y) -> 
+      (match b with
+      | Plus -> concrete_binop x y " + "
+      | Minus -> concrete_binop x y " - "
+      | Times -> concrete_binop x y " * "
+      | Equals -> concrete_binop x y " = "
+      | LessThan-> concrete_binop x y " < ")
+  | Conditional (i, t, e) -> "if " ^ (exp_to_concrete_string i) ^ " then " ^ 
+                             (exp_to_concrete_string t) ^ "else " ^ 
+                             (exp_to_concrete_string e)
+  | Fun (v, e) -> "fun " ^ v ^ " -> " ^ (exp_to_concrete_string e)
+  | Let (v, e1, e2) -> "let " ^ v ^ " = " ^ (exp_to_concrete_string e1) ^ 
+                       " in " ^ (exp_to_concrete_string e2)
+  | Letrec (v, e1, e2) -> "let rec " ^ v ^ " = " ^ (exp_to_concrete_string e1) 
+                          ^ " in " ^ (exp_to_concrete_string e2)
+  | Raise ->  "Raise"
+  | Unassigned -> "Unassigned"
+  | App (e1, e2) -> (exp_to_concrete_string e1) ^ (exp_to_concrete_string e2) ;;
      
 (* exp_to_abstract_string exp -- Return a string representation of the
    abstract syntax of the expression `exp` *)
-let exp_to_abstract_string (exp : expr) : string =
+let rec exp_to_abstract_string (exp : expr) : string =
   failwith "exp_to_abstract_string not implemented" ;;
+   (* let abstract (type : string) (val : string) : string =
+   type ^ " (" ^ val ^ ")"
+  match exp with
+  | Var x -> abstract "Var" x 
+  | Num x -> abstract "Num" x
+  | Bool x -> abstract "Bool" x
+  | Unop (x, y) -> (abstract "Unop" x) ^ exp_to_abstract_string y
+  | Binop (b, x, y) -> (abstract "Binop" b) ^ 
+                       (exp_to_abstract_string x) ^ (exp_to_abstract_string y)
+  | Conditional (i, t, e) -> abstract "Conditional" (i, t, e)   
+  | Fun (v, e) -> abstract "Fun" (v, e)
+  | Let (v, e1, e2) -> abstract "Let" (v, e1, e2)
+  | Letrec (v, e1, e2) -> abstract "Letrec" (v, e1, e2)
+  | Raise ->  "Raise"
+  | Unassigned -> "Unassigned"
+  | App (e1, e2) -> absract "App" (e1, e2) *)
