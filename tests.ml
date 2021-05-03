@@ -70,7 +70,7 @@ let subst_test () =
             "subst basic6";
     
     (* (let x = 5 in f y) [y -> x + 1] *)
-    (* let test7 = str_to_exp "let x = 5 in f y;;" in
+    let test7 = str_to_exp "let x = 5 in f y;;" in
     let test7st = subst "y" (str_to_exp "x+y;;") test7 in
     print_string "substitution basic7";
     print_newline ();
@@ -80,7 +80,7 @@ let subst_test () =
     print_newline ();
     unit_test (subst "y" (str_to_exp "x+y;;") test7 = str_to_exp "let x0 = 5 in f (z + 1);;")
             "subst basic7";
-     *)
+    
 
 ;;
 

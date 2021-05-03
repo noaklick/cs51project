@@ -1,6 +1,10 @@
 QUESTIONS:
 1) is there an example i can test it with?
 2) fresh var is there a specific thing it should be?
+3) do we need to check that everything is an Num to do binop or unop?
+4) are the only binops + - * = < ? we dont need a divide?
+5) do we just have an exception be a Raise if you try to add non-nums?
+6) rules for conditionals?
 
 test free_vars
 test subst

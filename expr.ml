@@ -64,9 +64,9 @@ let vars_of_list : string list -> varidset =
 let rec free_vars (exp : expr) : varidset =
    match exp with
   | Var x -> SS.singleton x
-  | Num x -> SS.empty
-  | Bool x -> SS.empty
-  | Unop (x, y) -> free_vars y
+  | Num _ -> SS.empty
+  | Bool _ -> SS.empty
+  | Unop (_, y) -> free_vars y
   | Binop (_, x, y) -> SS.union (free_vars x) (free_vars y)
   | Conditional (i, t, e) ->  SS.union (SS.union (free_vars i) (free_vars t))
      (free_vars e)
@@ -215,7 +215,7 @@ let rec exp_to_abstract_string (exp : expr) : string =
   | Var x -> abstract_one_st "Var" x 
   | Num x -> abstract_one_st "Num" (string_of_int x)
   | Bool x -> abstract_one_st "Bool" (string_of_bool x)
-  | Unop (x, y) -> (abstract_one_st "Unop" "Negate") ^ exp_to_abstract_string y
+  | Unop (_, y) -> (abstract_one_st "Unop" "Negate") ^ exp_to_abstract_string y
   | Binop (b, x, y) -> 
     (match b with
       | Plus -> abstract_binop x y "Plus"

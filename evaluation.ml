@@ -115,8 +115,45 @@ let eval_t (exp : expr) (_env : Env.env) : Env.value =
 
 (* The SUBSTITUTION MODEL evaluator -- to be completed *)
    
-let eval_s (_exp : expr) (_env : Env.env) : Env.value =
-  failwith "eval_s not implemented" ;;
+let rec eval_s (exp : expr) (_env : Env.env) : Env.value =
+  let binop_eval_s  (op : binop) (v1 : expr) (v2 : expr) : expr = 
+    match op, v1, v2 with
+    | Plus, Num x1, Num x2 -> Num (x1 + x2)
+    | Minus, Num x1, Num x2 -> Num (x1 - x2)
+    | Times, Num x1, Num x2 -> Num (x1 * x2)
+    | Equals, Num x1, Num x2 -> Bool (x1 = x2)
+    | LessThan, Num x1, Num x2 -> Bool (x1 < x2)
+    | _, _, _ -> Raise
+  in
+
+  let unop_eval_s (op : unop) (v : expr) : expr = 
+    match op, v with
+    | Negate, Num x -> Num (~-x)
+    | _, _ -> Raise
+  in
+
+  let rec eval_s_help (v : expr) : expr =
+    match exp with
+    | Var x -> Var x
+    | Num x -> Num x
+    | Bool x -> Bool x
+    | Unop (x, y) -> unop_eval_s x (eval_s_help y)
+    | Binop (b, x, y) -> binop_eval_s b (eval_s_help x) (eval_s_help y)
+    | Conditional (i, t, e) -> 
+        Conditional (eval_s_help i, eval_s_help t, eval_s_help e)
+    | Fun (v, e) -> Fun (v, e)
+    | Let (v, e1, e2) -> subst v (eval_s_help e1) e2
+    | Letrec (v, e1, e2) -> subst v (eval_s_help e1) e2
+    | Raise ->  Raise
+    | Unassigned -> Unassigned
+    | App (e1, e2) -> 
+       (match eval_s_help e1 with
+        | Fun (x, b) -> subst x (eval_s_help e2) b
+        | _ -> Raise)
+  in
+
+  Env.Val (eval_s_help exp) ;;
+  (* failwith "eval_s not implemented" ;; *)
      
 (* The DYNAMICALLY-SCOPED ENVIRONMENT MODEL evaluator -- to be
    completed *)
