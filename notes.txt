@@ -5,6 +5,8 @@ my merlin isnt working
 do i use a makefile? YES 
 
 test free_vars
+test subst
+new_varname
 subst
 eval_s
 then next stuffs

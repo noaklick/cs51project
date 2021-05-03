@@ -80,8 +80,21 @@ let rec free_vars (exp : expr) : varidset =
    a running counter a la `gensym`. Assumes no variable names use the
    prefix "var". (Otherwise, they might accidentally be the same as a
    generated variable name.) *)
-let new_varname () : varid =
-  failwith "new_varname not implemented" ;;
+let new_varname : unit ->  varid =
+  
+  let suffix = ref ~-1 in
+  fun () ->
+    suffix := !suffix + 1;
+    "str" ^ string_of_int !suffix
+  (* let suffix = ref 0 in
+  (* let gen =  *)
+    let symbol = "var" ^ string_of_int !suffix in
+              incr suffix;
+              symbol
+  in gen ;; *)
+  ;;
+
+  (* failwith "new_varname not implemented" ;; *)
 
 (*......................................................................
   Substitution 
@@ -95,7 +108,10 @@ let new_varname () : varid =
    substituted for free occurrences of `var_name`, avoiding variable
    capture *)
 let subst (var_name : varid) (repl : expr) (exp : expr) : expr =
+  (* use new_varname to define fresh variables *)
   failwith "subst not implemented" ;;
+  
+  ;;
      
 (*......................................................................
   String representations of expressions
