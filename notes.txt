@@ -1,13 +1,11 @@
-fix the compilation error
-
-my merlin isnt working
-
-do i use a makefile? YES 
+QUESTIONS:
+1) is there an example i can test it with?
+2) fresh var is there a specific thing it should be?
 
 test free_vars
 test subst
 subst
-eval_s
+eval_s LOOK AT LAB9!!!! make sure to accound for unbound var
 then next stuff
 clean up design by far on the string ones
 

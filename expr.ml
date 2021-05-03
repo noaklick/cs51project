@@ -7,6 +7,7 @@
   Abstract syntax of MiniML expressions 
  *)
 
+
 type unop =
   | Negate
 ;;
@@ -85,7 +86,7 @@ let new_varname : unit ->  varid =
   let suffix = ref ~-1 in
   fun () ->
     suffix := !suffix + 1;
-    "str" ^ string_of_int !suffix ;;
+    "x" ^ string_of_int !suffix ;;
 
 (*......................................................................
   Substitution 
@@ -116,19 +117,24 @@ let rec subst (var_name : varid) (repl : expr) (exp : expr) : expr =
     if v = var_name then Fun (v, e)
     else if not (SS.mem v (free_vars repl)) 
       then Fun (v, subst var_name repl e)
-    else Fun (new_varname (), subst var_name repl e)
+    else let new_var = new_varname () in
+      Fun (new_var, subst v (Var new_var) (subst var_name repl e))
      (* HOW TO DO BOTH SUBSTITUTIONS AT ONCE? *)
   | Let (v, e1, e2) -> 
       if v = var_name then Let (v, subst var_name repl e1, e2)
       else if not (SS.mem v (free_vars repl)) 
         then Let (v, subst var_name repl e1, subst var_name repl e2)
-      else Let (new_varname (), subst var_name repl e1, subst var_name repl e2)
+      else let new_var = new_varname () in
+      Let (new_varname (), subst var_name repl e1, 
+          subst v (Var new_var) (subst var_name repl e2))
     (* HOW TO DO BOTH SUBSTITUTIONS AT ONCE? *)
   | Letrec (v, e1, e2) -> 
       if v = var_name then Letrec (v, subst var_name repl e1, e2)
      else if not (SS.mem v (free_vars repl)) 
         then Letrec (v, subst var_name repl e1, subst var_name repl e2)
-      else Letrec (new_varname (), subst var_name repl e1, subst var_name repl e2)
+       else let new_var = new_varname () in
+      Letrec (new_varname (), subst var_name repl e1, 
+          subst v (Var new_var) (subst var_name repl e2))
     (* HOW TO DO BOTH SUBSTITUTIONS AT ONCE? *)
   | Raise -> Raise
   | Unassigned -> Unassigned
