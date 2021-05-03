@@ -115,7 +115,7 @@ let eval_t (exp : expr) (_env : Env.env) : Env.value =
 
 (* The SUBSTITUTION MODEL evaluator -- to be completed *)
    
-let rec eval_s (exp : expr) (_env : Env.env) : Env.value =
+let eval_s (exp : expr) (_env : Env.env) : Env.value =
   let binop_eval_s  (op : binop) (v1 : expr) (v2 : expr) : expr = 
     match op, v1, v2 with
     | Plus, Num x1, Num x2 -> Num (x1 + x2)
@@ -125,7 +125,7 @@ let rec eval_s (exp : expr) (_env : Env.env) : Env.value =
     | Equals, Bool x1, Bool x2 -> Bool (x1 = x2)
     | LessThan, Num x1, Num x2 -> Bool (x1 < x2)
     | LessThan, Bool x1, Bool x2 -> Bool (x1 = x2)
-    | _, _, _ -> Raise
+    | b, x1, x2 -> Binop (b, x1, x2)
   in
 
   let unop_eval_s (op : unop) (v : expr) : expr = 
@@ -135,14 +135,20 @@ let rec eval_s (exp : expr) (_env : Env.env) : Env.value =
   in
 
   let rec eval_s_help (v : expr) : expr =
-    match exp with
-    | Var x -> Var x
+    match v with
+    | Var x -> Raise
     | Num x -> Num x
     | Bool x -> Bool x
-    | Unop (x, y) -> unop_eval_s x (eval_s_help y)
-    | Binop (b, x, y) -> binop_eval_s b (eval_s_help x) (eval_s_help y)
+    | Unop (x, y) ->
+       (* unop_eval_s x y *)
+       unop_eval_s x (eval_s_help y)
+    | Binop (b, x, y) -> 
+      (* binop_eval_s b x y *)
+      binop_eval_s b (eval_s_help x) (eval_s_help y)
     | Conditional (i, t, e) -> 
-        Conditional (eval_s_help i, eval_s_help t, eval_s_help e)
+        (match i with
+        | Bool x -> if x then eval_s_help t else eval_s_help e
+        | _ -> Raise)
     | Fun (v, e) -> Fun (v, e)
     | Let (v, e1, e2) -> subst v (eval_s_help e1) e2
     | Letrec (v, e1, e2) -> subst v (eval_s_help e1) e2

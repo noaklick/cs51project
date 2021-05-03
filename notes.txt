@@ -1,11 +1,24 @@
 QUESTIONS:
-1) is there an example i can test it with?
-2) fresh var is there a specific thing it should be?
-3) do we need to check that everything is an Num to do binop or unop?
-4) are the only binops + - * = < ? we dont need a divide?
-5) do we just have an exception be a Raise if you try to add non-nums?
+1) is there an example i can test the z rules in subst with?
+
+5) !!do we just have an exception be a Raise if you try to add non-nums?
 6) rules for conditionals?
-7) how to test subst if it outputs an env?
+
+8)!!!! stack overflow
+9) instructions for env module
+
+Answered:
+XX 2) fresh var is there a specific thing it should be?
+XX 3) do we need to check that everything is an Num to do binop or unop subst?
+XX 4) are the only binops + - * = < ? we dont need a divide?
+XX 7) how to test subst if it outputs an env?
+
+eval error something goes wrong in my program in my code
+do a raise when code should raise an exception
+
+conditionals:
+if has to be bool!!
+  only if t then second else if f then third
 
 test free_vars
 test subst
@@ -44,3 +57,9 @@ exp match
   | Raise -> 
   | Unassigned ->
   | App (e1, e2) -> 
+
+
+
+
+  letrec notes:
+

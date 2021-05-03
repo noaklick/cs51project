@@ -35,7 +35,7 @@ let repl () =
         
         (* READ and parse an expression from the input *)
         let exp = MP.input ML.token lexbuf in 
-        
+         printf "--> %s\n" (Ex.exp_to_abstract_string exp);
         (* EVALuate it *)
         let res = Ev.evaluate exp env in
          

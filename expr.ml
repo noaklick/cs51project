@@ -161,7 +161,7 @@ let rec exp_to_concrete_string (exp : expr) : string =
   | Var x -> x
   | Num x -> string_of_int x
   | Bool x -> string_of_bool x
-  | Unop (Negate, y) -> "~" ^ (exp_to_concrete_string y)
+  | Unop (Negate, y) -> "~" ^ "(" ^ (exp_to_concrete_string y) ^ ")"
   | Binop (b, x, y) -> 
       (match b with
       | Plus -> concrete_binop x y " + "
@@ -215,7 +215,7 @@ let rec exp_to_abstract_string (exp : expr) : string =
   | Var x -> abstract_one_st "Var" x 
   | Num x -> abstract_one_st "Num" (string_of_int x)
   | Bool x -> abstract_one_st "Bool" (string_of_bool x)
-  | Unop (_, y) -> (abstract_one_st "Unop" "Negate") ^ exp_to_abstract_string y
+  | Unop (_, y) -> "Unop (Negate, " ^ exp_to_abstract_string y ^ ")"
   | Binop (b, x, y) -> 
     (match b with
       | Plus -> abstract_binop x y "Plus"
