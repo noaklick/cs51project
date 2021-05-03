@@ -68,19 +68,61 @@ module Env : ENV =
     let empty () : env = []
 
     let close (exp : expr) (env : env) : value =
-      failwith "close not implemented"
+    (* return closure containing expr and env *)
+      Closure (exp, env)
 
+    (* lookup env varid -- Returns the value in the `env` for the
+       `varid`, raising an `Eval_error` if not found *)
     let lookup (env : env) (varname : varid) : value =
-      failwith "lookup not implemented"
+    (* look for varname in list and if you find it in the env then return the value stored in it
+    else raise EvalError *)
+      
+      !(List.assoc varname env)
+      (* let lookup_help ((id, _) : varid * value ref) : bool = 
+        id = varname
+      in
+
+      match List.find_opt (lookup_help) env with 
+      | None -> raise (EvalError "closure error")
+      | Some (id, r) -> !r *)
 
     let extend (env : env) (varname : varid) (loc : value ref) : env =
-      failwith "extend not implemented"
+      (varname, loc) :: List.remove_assoc varname env
+      (* match (List.assoc_opt varname env) with
+      | None -> (varname, loc) :: env
+      | Some r -> r := !loc; env *)
+   
+    let rec value_to_string ?(printenvp : bool = true) (v : value) : string =
+      (* if printenvp is true then print the whole environment
+      else print the concrete *)
+      (* if printenvp then env
+      List.iter (Printf.printf "%d") *)
+      match v with
+      | Val v -> exp_to_concrete_string v
+      | Closure (v, e) -> 
+          if printenvp then 
+            "[" ^ exp_to_concrete_string v ^ " where " ^ env_to_string e ^ "]"
+          else exp_to_concrete_string v
+      (* if printevnp is false then print value and enpty string *)
+(* string * value ref list *)
+(* [list, each elt, make it into a string, and then map that over the list,
+and then concat all of those strings
+string module  ] *)
+(* expr -> concrete where environ to string *)
 
-    let value_to_string ?(printenvp : bool = true) (v : value) : string =
-      failwith "value_to_string not implemented"
+      (* call environment *)
+    
 
-    let env_to_string (env : env) : string =
-      failwith "env_to_string not implemented"
+    and env_to_string (env : env) : string =
+    (* they can call each other *)
+    (* prints the whole environment (list of pairs) *)
+      let rec list_to_string (e : env) : string =
+        match e with
+        | [] -> ""
+        | (v, r) :: tl -> "{" ^ v ^ "->" ^ (value_to_string !r) ^ "}" ^ (list_to_string tl)
+      in
+      "[" ^ list_to_string env ^ "]"
+        (* call value *)
   end
 ;;
 
@@ -125,7 +167,7 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
     | Equals, Bool x1, Bool x2 -> Bool (x1 = x2)
     | LessThan, Num x1, Num x2 -> Bool (x1 < x2)
     | LessThan, Bool x1, Bool x2 -> Bool (x1 = x2)
-    | b, x1, x2 -> Binop (b, x1, x2)
+    | _, _, _ -> Raise
   in
 
   let unop_eval_s (op : unop) (v : expr) : expr = 
@@ -140,10 +182,8 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
     | Num x -> Num x
     | Bool x -> Bool x
     | Unop (x, y) ->
-       (* unop_eval_s x y *)
        unop_eval_s x (eval_s_help y)
     | Binop (b, x, y) -> 
-      (* binop_eval_s b x y *)
       binop_eval_s b (eval_s_help x) (eval_s_help y)
     | Conditional (i, t, e) -> 
         (match i with
@@ -151,6 +191,7 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
         | _ -> Raise)
     | Fun (v, e) -> Fun (v, e)
     | Let (v, e1, e2) -> subst v (eval_s_help e1) e2
+    (* update when i figure this out! *)
     | Letrec (v, e1, e2) -> subst v (eval_s_help e1) e2
     | Raise ->  Raise
     | Unassigned -> Unassigned
