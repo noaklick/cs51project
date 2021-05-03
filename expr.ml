@@ -85,16 +85,7 @@ let new_varname : unit ->  varid =
   let suffix = ref ~-1 in
   fun () ->
     suffix := !suffix + 1;
-    "str" ^ string_of_int !suffix
-  (* let suffix = ref 0 in
-  (* let gen =  *)
-    let symbol = "var" ^ string_of_int !suffix in
-              incr suffix;
-              symbol
-  in gen ;; *)
-  ;;
-
-  (* failwith "new_varname not implemented" ;; *)
+    "str" ^ string_of_int !suffix ;;
 
 (*......................................................................
   Substitution 
@@ -104,12 +95,45 @@ let new_varname : unit ->  varid =
   semantics.
  *)
 
+
+  ;;
+
 (* subst var_name repl exp -- Return the expression `exp` with `repl`
    substituted for free occurrences of `var_name`, avoiding variable
    capture *)
-let subst (var_name : varid) (repl : expr) (exp : expr) : expr =
-  (* use new_varname to define fresh variables *)
-  failwith "subst not implemented" ;;
+let rec subst (var_name : varid) (repl : expr) (exp : expr) : expr =
+   match exp with
+  | Var x -> if x = var_name then repl else Var x 
+      (* ACCOUNT FOR FREE VAR *)
+  | Num x -> Num x
+  | Bool x -> Bool x
+  | Unop (x, y) -> Unop (x, subst var_name repl y)
+  | Binop (b, x, y) -> Binop (b, subst var_name repl x, subst var_name repl y)
+  | Conditional (i, t, e) -> 
+      Conditional (subst var_name repl i, subst var_name repl t, 
+                  subst var_name repl e)
+  | Fun (v, e) ->
+    if v = var_name then Fun (v, e)
+    else if not (SS.mem v (free_vars repl)) 
+      then Fun (v, subst var_name repl e)
+    else Fun (new_varname (), subst var_name repl e)
+     (* HOW TO DO BOTH SUBSTITUTIONS AT ONCE? *)
+  | Let (v, e1, e2) -> 
+      if v = var_name then Let (v, subst var_name repl e1, e2)
+      else if not (SS.mem v (free_vars repl)) 
+        then Let (v, subst var_name repl e1, subst var_name repl e2)
+      else Let (new_varname (), subst var_name repl e1, subst var_name repl e2)
+    (* HOW TO DO BOTH SUBSTITUTIONS AT ONCE? *)
+  | Letrec (v, e1, e2) -> 
+      if v = var_name then Letrec (v, subst var_name repl e1, e2)
+     else if not (SS.mem v (free_vars repl)) 
+        then Letrec (v, subst var_name repl e1, subst var_name repl e2)
+      else Letrec (new_varname (), subst var_name repl e1, subst var_name repl e2)
+    (* HOW TO DO BOTH SUBSTITUTIONS AT ONCE? *)
+  | Raise -> Raise
+  | Unassigned -> Unassigned
+  | App (e1, e2) -> App (subst var_name repl e1, subst var_name repl e2)
+  (* failwith "subst not implemented" ;; *)
   
   ;;
      

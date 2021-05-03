@@ -6,11 +6,15 @@ do i use a makefile? YES
 
 test free_vars
 test subst
-new_varname
 subst
 eval_s
-then next stuffs
+then next stuff
 clean up design by far on the string ones
+
+next: test substitution (do the unit testing framework, use the tests
+  from lab and the textbook and ed)
+
+
 
 exp match 
  match exp with
@@ -27,7 +31,6 @@ exp match
       | LessThan-> 
   | Conditional (i, t, e) -> 
   | Fun (v, e) -> 
-     
   | Let (v, e1, e2) -> 
   | Letrec (v, e1, e2) -> 
   | Raise -> 
