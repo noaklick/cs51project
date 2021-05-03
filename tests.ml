@@ -5,6 +5,7 @@
  *)
 open Miniml;;
 open Expr;;
+open Evaluation;;
 
 open CS51Utils ;; 
 open Absbook ;;
@@ -80,11 +81,30 @@ let subst_test () =
     print_newline ();
     unit_test (subst "y" (str_to_exp "x+y;;") test7 = str_to_exp "let x0 = 5 in f (z + 1);;")
             "subst basic7";
-    
 
 ;;
 
+
+let eval_s_test () =
+    (* 3+5  *)
+    let test1 = str_to_exp "3+5;;" in
+    let test1st = eval_s test1 in
+    print_string "eval_s basic";
+    print_newline ();
+    (* print_string (exp_to_abstract_string test1st) ; *)
+    print_newline ();
+    (* print_string (exp_to_concrete_string test1st); *)
+    print_newline ();
+    unit_test (subst "x" (Num (50)) test1 = Binop (Plus,Num (50),Num (1)))
+            "subst basic";
+    print_newline ();
+
+
+;;
+
+
 let test_all () = 
-    subst_test ();;
+    subst_test ();
+    eval_s_test () ;;
 
 let _ = test_all () ;;

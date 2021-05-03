@@ -122,7 +122,9 @@ let rec eval_s (exp : expr) (_env : Env.env) : Env.value =
     | Minus, Num x1, Num x2 -> Num (x1 - x2)
     | Times, Num x1, Num x2 -> Num (x1 * x2)
     | Equals, Num x1, Num x2 -> Bool (x1 = x2)
+    | Equals, Bool x1, Bool x2 -> Bool (x1 = x2)
     | LessThan, Num x1, Num x2 -> Bool (x1 < x2)
+    | LessThan, Bool x1, Bool x2 -> Bool (x1 = x2)
     | _, _, _ -> Raise
   in
 
@@ -151,7 +153,6 @@ let rec eval_s (exp : expr) (_env : Env.env) : Env.value =
         | Fun (x, b) -> subst x (eval_s_help e2) b
         | _ -> Raise)
   in
-
   Env.Val (eval_s_help exp) ;;
   (* failwith "eval_s not implemented" ;; *)
      
@@ -183,4 +184,4 @@ let eval_e _ =
    above, not the `evaluate` function, so it doesn't matter how it's
    set when you submit your solution.) *)
    
-let evaluate = eval_t ;;
+let evaluate = eval_s ;;

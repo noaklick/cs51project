@@ -5,12 +5,18 @@ QUESTIONS:
 4) are the only binops + - * = < ? we dont need a divide?
 5) do we just have an exception be a Raise if you try to add non-nums?
 6) rules for conditionals?
+7) how to test subst if it outputs an env?
 
 test free_vars
 test subst
 subst
 eval_s LOOK AT LAB9!!!! make sure to accound for unbound var
-then next stuff
+test eval_s
+fill out the Env module
+eval_d
+test eval_d
+extension (eval_l)
+writeup
 clean up design by far on the string ones
 
 next: test substitution (do the unit testing framework, use the tests
