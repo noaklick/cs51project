@@ -4,8 +4,30 @@ my merlin isnt working
 
 do i use a makefile? YES 
 
-free_vars
+test free_vars
 subst
 eval_s
 then next stuffs
 clean up design by far on the string ones
+
+exp match 
+ match exp with
+  | Var x -> 
+  | Num x -> 
+  | Bool x -> 
+  | Unop (x, y) ->
+  | Binop (b, x, y) -> 
+    (match b with
+      | Plus -> 
+      | Minus ->
+      | Times -> 
+      | Equals -> 
+      | LessThan-> 
+  | Conditional (i, t, e) -> 
+  | Fun (v, e) -> 
+     
+  | Let (v, e1, e2) -> 
+  | Letrec (v, e1, e2) -> 
+  | Raise -> 
+  | Unassigned ->
+  | App (e1, e2) -> 

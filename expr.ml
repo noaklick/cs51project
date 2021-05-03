@@ -60,8 +60,21 @@ let vars_of_list : string list -> varidset =
   
 (* free_vars exp -- Returns the set of `varid`s corresponding to free
    variables in `exp` *)
-let free_vars (exp : expr) : varidset =
-  failwith "free_vars not implemented" ;;
+let rec free_vars (exp : expr) : varidset =
+   match exp with
+  | Var x -> SS.singleton x
+  | Num x -> SS.empty
+  | Bool x -> SS.empty
+  | Unop (x, y) -> free_vars y
+  | Binop (_, x, y) -> SS.union (free_vars x) (free_vars y)
+  | Conditional (i, t, e) ->  SS.union (SS.union (free_vars i) (free_vars t))
+     (free_vars e)
+  | Fun (v, e) -> SS.remove v (free_vars e)
+  | Let (v, e1, e2) -> SS.union (SS.remove v (free_vars e2)) (free_vars e1)
+  | Letrec (v, e1, e2) -> SS.union (SS.remove v (free_vars e2)) (free_vars e1)
+  | Raise -> SS.empty
+  | Unassigned ->SS.empty
+  | App (e1, e2) -> SS.union (free_vars e1) (free_vars e2)
   
 (* new_varname () -- Returns a freshly minted `varid` constructed with
    a running counter a la `gensym`. Assumes no variable names use the
