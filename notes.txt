@@ -1,12 +1,10 @@
 QUESTIONS:
-1) examples to test the fresh_vars?
-5) is it reasonable how i do eval_l?
+
 
 Before OH:
 design: eval_d, subst, string
 
 left to do:
-  comment all my helpers
   writeup : lex, float, greater than
   go through and check that i'm following EACH RULE and didn't accidentally get a few mixed up
   do some more eval_l tests to be totally sure
@@ -53,6 +51,8 @@ XX 2) !! letrec for all eval  / subst!?
     example to show: let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10;;
 XX 3) ! how do i print the environment of just a value as per 2:42 in the video? 
 XX 4) my tests that fail but seem fine: negation and the fresh_var
+XX 1) examples to test the fresh_vars?
+XX 5) is it reasonable how i do eval_l?
 
 
 what do eval_l and eval_d share?

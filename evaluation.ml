@@ -126,39 +126,51 @@ let eval_t (exp : expr) (_env : Env.env) : Env.value =
 
 (* The SUBSTITUTION MODEL evaluator -- to be completed *)
 
+(* evaluate all binops *)  (* floats added for extension *)
 let binop_eval  (op : binop) (v1 : expr) (v2 : expr) : expr = 
     match op, v1, v2 with
+    (* plus *)
     | Plus, Num x1, Num x2 -> Num (x1 + x2)
     | Plus, Float x1, Float x2 -> Float (x1 +. x2)
     | Plus, _ , _ -> raise (EvalError "tried to add incompatible types")
+
+    (* minus *)
     | Minus, Num x1, Num x2 -> Num (x1 - x2)
     | Minus, Float x1, Float x2 -> Float (x1 -. x2)
     | Minus, _ , _ -> raise (EvalError "tried to subtract incompatible types")
+
+    (* times *)
     | Times, Num x1, Num x2 -> Num (x1 * x2)
     | Times, Float x1, Float x2 -> Float (x1 *. x2)
-    | Times, _ , _ -> raise (EvalError "tried to multiple incompatible types")
+    | Times, _ , _ -> raise (EvalError "tried to multiply incompatible types")
+
+    (* equals *)
     | Equals, Num x1, Num x2 -> Bool (x1 = x2)
     | Equals, Float x1, Float x2 -> Bool (x1 = x2)
     | Equals, Bool x1, Bool x2 -> Bool (x1 = x2)
-    | Equals, _ , _ -> raise (EvalError "tried to compare incompatible types")
+
+    (* less than *)
     | LessThan, Num x1, Num x2 -> Bool (x1 < x2)
     | LessThan, Bool x1, Bool x2 -> Bool (x1 < x2)
     | LessThan, Float x1, Float x2 -> Bool (x1 < x2)
-    | LessThan, _ , _ -> raise (EvalError "tried to compare incompatible types")
+
+    (* greater than *)
     | GreaterThan, Num x1, Num x2 -> Bool (x1 > x2)
     | GreaterThan, Bool x1, Bool x2 -> Bool (x1 > x2)
     | GreaterThan, Float x1, Float x2 -> Bool (x1 > x2)
-    | GreaterThan, _ , _ -> 
+    | _, _ , _ -> 
         raise (EvalError "tried to compare incompatible types")
 
 let eval_s (exp : expr) (_env : Env.env) : Env.value =
 
+  (* evaluate s unops *)
   let unop_eval_s (op : unop) (v : expr) : expr = 
     match op, v with
     | Negate, Num x -> Num (~-x)
     | _, _ -> raise (EvalError "unop not an op")
   in
 
+  (* to preserve expr -> expr *)
   let rec eval_s_help (v : expr) : expr =
     match v with
     | Var x -> raise (EvalError "tried to evaluate a variable")
@@ -188,25 +200,26 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
             eval_s_help (subst x vq b)
         | _ -> raise (EvalError "tried to apply a non function"))
   in
-
   Env.Val (eval_s_help exp) ;;
-     
-(* The DYNAMICALLY-SCOPED ENVIRONMENT MODEL evaluator -- to be
-   completed *)
 
+(* function to get an expr from an Env.value *)
 let extract_val (v : Env.value) : expr =
   match v with
   | Val x -> x
   | Closure (x, y) -> x ;;
+     
+(* The DYNAMICALLY-SCOPED ENVIRONMENT MODEL evaluator -- to be
+   completed *)
    
 let rec eval_d (exp : expr) (env : Env.env) : Env.value =
-
+  (* evaluate d unops *)
   let unop_eval_d (op : unop) (v : expr) : expr = 
     match op, v with
     | Negate, Num x -> Num (~-x)
     | _, _ -> raise (EvalError "unop not an op")
   in
 
+  (* to preserve expr -> expr *)
   let rec eval_d_help (v : expr) (en : Env.env) : expr =
     match v with
     | Var x -> raise (EvalError"something went wrong")
@@ -227,11 +240,11 @@ let rec eval_d (exp : expr) (env : Env.env) : Env.value =
         let vb = extract_val (eval_d b (Env.extend env x (ref vd))) in
         vb
     | Letrec (x, d, b) ->
-      let x_ref = ref (Env.Val Unassigned) in
-      let env_ext = Env.extend env x x_ref in 
-      let vd = eval_d d env_ext in
-      x_ref := vd;
-      extract_val (eval_d b env_ext)
+        let x_ref = ref (Env.Val Unassigned) in
+        let env_ext = Env.extend env x x_ref in 
+        let vd = eval_d d env_ext in
+        x_ref := vd;
+        extract_val (eval_d b env_ext)
     | Raise -> Raise
     | Unassigned -> raise (EvalError "tried to evaluate unassigned")
     | App (p, q) -> 
@@ -254,7 +267,7 @@ let rec eval_d (exp : expr) (env : Env.env) : Env.value =
    completed as (part of) your extension *)
    
 let rec eval_l (exp : expr) (env : Env.env) : Env.value =
-
+  (* evaluate l unops *)
   let unop_eval_l (op : unop) (v : expr) : expr = 
     match op, v with
     | Negate, Num x -> Num (~-x)
@@ -280,6 +293,7 @@ let rec eval_l (exp : expr) (env : Env.env) : Env.value =
     | _ -> raise (EvalError "something went wrong")
   in
 
+  (* handle all exp -> Env.value cases *)
   match exp with
   | Var x -> Env.lookup env x
   | Fun (x, p) -> Closure (Fun (x,p), env)

@@ -18,7 +18,7 @@ type binop =
   | Times
   | Equals
   | LessThan
-  | GreaterThan
+  | GreaterThan                          (* added for extension *)
 ;;
 
 type varid = string ;;
@@ -103,6 +103,8 @@ let new_varname : unit -> varid =
    substituted for free occurrences of `var_name`, avoiding variable
    capture *)
 let rec subst (var_name : varid) (repl : expr) (exp : expr) : expr =
+
+  (* helper to substitute an expression with the var_name and repl *)
   let subst_help (x : expr) = 
     subst var_name repl x 
   in
@@ -149,6 +151,7 @@ let rec subst (var_name : varid) (repl : expr) (exp : expr) : expr =
    the concrete syntax of the expression `exp` *)
 
 let rec exp_to_concrete_string (exp : expr) : string =
+  (* helper function to handle all binops *)
   let concrete_binop (x : expr) (y : expr) (bin : string) : string =
     (exp_to_concrete_string x) ^ bin ^ (exp_to_concrete_string y)
   in
@@ -166,7 +169,7 @@ let rec exp_to_concrete_string (exp : expr) : string =
       | Times -> concrete_binop x y " * "
       | Equals -> concrete_binop x y " = "
       | LessThan -> concrete_binop x y " < "
-      | GreaterThan -> concrete_binop x y " > ")
+      | GreaterThan -> concrete_binop x y " > ") (* added for extension *)
   | Conditional (i, t, e) -> "if " ^ (exp_to_concrete_string i) ^ " then " ^ 
                              (exp_to_concrete_string t) ^ " else " ^ 
                              (exp_to_concrete_string e)
@@ -184,22 +187,26 @@ let rec exp_to_concrete_string (exp : expr) : string =
 (* exp_to_abstract_string exp -- Return a string representation of the
    abstract syntax of the expression `exp` *)
 let rec exp_to_abstract_string (exp : expr) : string =  
+  (* handle all cases of two strings *)
   let abstract_one (t : string) (v : string) : string =
     t ^ " (" ^ v ^ ")"
   in 
 
+  (* handle all cases of a string and 3 exprs *)
   let abstract_three_ex (t : string) (v1 : expr) (v2 : expr) (v3 : expr) 
                       : string =
     abstract_one t ((exp_to_abstract_string v1) ^ ", " ^ 
     (exp_to_abstract_string v2) ^ ", " ^ (exp_to_abstract_string v3))
   in 
 
+  (* handle all cases of 2 strings and 2 exprs *)
   let abstract_three_st (t : string) (v1 : string) (v2 : expr) (v3 : expr) 
                       : string =
     abstract_one t (v1 ^ ", " ^ (exp_to_abstract_string v2)
      ^ ", " ^ (exp_to_abstract_string v3))
   in 
 
+  (* handle all binops *)
   let abstract_binop (x : expr) (y : expr) (bin : string) : string =
     "Binop" ^ " (" ^ bin ^ ", " ^ (exp_to_abstract_string x) ^ ", " ^ 
       (exp_to_abstract_string y) ^ ")"
