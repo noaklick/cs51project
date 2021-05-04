@@ -136,18 +136,24 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
     | Equals, Bool x1, Bool x2 -> Bool (x1 = x2)
     | LessThan, Num x1, Num x2 -> Bool (x1 < x2)
     | LessThan, Bool x1, Bool x2 -> Bool (x1 = x2)
-    | _, _, _ -> Raise
+    | _, _, _ -> 
+        print_string "line 140 is the issue";
+        Raise
   in
 
   let unop_eval_s (op : unop) (v : expr) : expr = 
     match op, v with
     | Negate, Num x -> Num (~-x)
-    | _, _ -> Raise
+    | _, _ -> 
+      print_string "line 148 is the issue";
+      Raise
   in
 
   let rec eval_s_help (v : expr) : expr =
     match v with
-    | Var x -> Raise
+    | Var x -> 
+        print_string "line 155 is the issue";
+        Raise
     | Num x -> Num x
     | Bool x -> Bool x
     | Unop (x, y) ->
@@ -157,7 +163,9 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
     | Conditional (i, t, e) -> 
         (match i with
         | Bool x -> if x then eval_s_help t else eval_s_help e
-        | _ -> Raise)
+        | _ -> 
+           print_string "line 167 is the issue";
+           Raise)
     | Fun (v, e) -> Fun (v, e)
     | Let (v, e1, e2) -> eval_s_help (subst v (eval_s_help e1) e2)
 
@@ -177,7 +185,9 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
       (* subst v (eval_s_help e1) e2 *)
 
 
-    | Raise -> Raise
+    | Raise -> 
+          print_string "line 187 is the issue";
+          Raise
     | Unassigned -> raise (EvalError "tried to evaluate unassigned")
     | App (e1, e2) -> 
        (match eval_s_help e1 with

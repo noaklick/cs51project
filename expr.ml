@@ -134,14 +134,12 @@ let rec subst (var_name : varid) (repl : expr) (exp : expr) : expr =
       Let (new_var, subst varname repl e1, subst v new_var (subst varname repl e2)))
     *)
 
-  | Letrec (v, e1, e2) -> 
-      if v = var_name then Letrec (v, subst var_name repl e1, e2)
-      else if not (SS.mem v (free_vars repl)) 
-        then Letrec (v, subst var_name repl e1, subst var_name repl e2)
-       else let new_var = new_varname () in
-      Letrec (new_var, subst var_name repl e1, subst var_name repl
-          (subst v (Var new_var) e2))
-    (* HOW TO DO BOTH SUBSTITUTIONS AT ONCE? *)
+  | Letrec (v, d, b) -> 
+      if v = var_name then Letrec (v, subst var_name repl d, b)
+      else if SS.mem v (free_vars repl)
+        then let z = new_varname () in 
+        Letrec (z, subst z repl d, subst z repl (subst v (Var z) b))
+      else Letrec (v, subst var_name repl d, subst var_name repl b)
   | Raise -> Raise
   | Unassigned -> Unassigned
   | App (e1, e2) -> App (subst var_name repl e1, subst var_name repl e2)
