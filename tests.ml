@@ -13,42 +13,19 @@ open Absbook ;;
 let subst_test () = 
     (* (x + 1)[x ↦ 50]  *)
     let test1 = str_to_exp "x+1;;" in
-    (* let test1st = subst "x" (Num (50)) test1 in *)
-    (* print_string "substitution basic";
-    print_newline ();
-    print_string (exp_to_abstract_string test1st) ;
-    print_newline ();
-    print_string (exp_to_concrete_string test1st);
-    print_newline (); *)
     unit_test (subst "x" (Num (50)) test1 = Binop (Plus,Num (50),Num (1)))
             "subst basic";
-    (* print_newline (); *)
 
     (* (let x = y * y in x + x)[x ↦ 3] *)
     let test2 = str_to_exp "let x = y * y in x + x;;" in
-    (* let test2st = subst "x" (Num(3)) test2 in
-    print_string "substitution basic2";
-    print_newline ();
-    print_string (exp_to_abstract_string test2st) ;
-    print_newline ();
-    print_string (exp_to_concrete_string test2st);
-    print_newline (); *)
     unit_test (subst "x" (Num(3)) test2 = str_to_exp ("let x = y*y in x + x;;"))
             "subst basic2";
-    (* print_newline (); *)
 
     (* (let x = y * y in x + x)[y ↦ 3] *)
     let test3 = str_to_exp "(let x = y * y in x + x);;" in
-    (* let test3st = subst "y" (Num(3)) test3 in
-    print_string "substitution basic3";
-    print_newline ();
-    print_string (exp_to_abstract_string test3st) ;
-    print_newline ();
-    print_string (exp_to_concrete_string test3st);
-    print_newline (); *)
     unit_test (subst "y" (Num(3)) test3 = str_to_exp "let x = 3 * 3 in x + x;;")
             "subst basic3";
-    (* print_newline (); *)
+   
 
     (*  ((fun x -> x * x) (x - 2)) [x ↦ 8] *)
     let test4 = str_to_exp " ((fun x -> x * x) (x - 2)) ;;" in
@@ -66,29 +43,27 @@ let subst_test () =
             "subst basic6";
     
     (*  x + y [x ↦ 8] *)
-    let test6 = str_to_exp "x+y;;" in
-    unit_test (subst "x" (Num(8)) test6 = str_to_exp "8+y;;")
-            "subst basic6";
+    let test7 = str_to_exp "x+y;;" in
+    unit_test (subst "x" (Num(8)) test7 = str_to_exp "8+y;;")
+            "subst basic7";
     
     (* (let x = 5 in f y) [y -> x + 1] *)
-    let test7 = str_to_exp "let x = 5 in f y;;" in
-    let test7st = subst "y" (str_to_exp "x+1;;") test7 in
-    print_string "substitution basic7";
+    let test8 = str_to_exp "let x = 5 in f y;;" in
+    let test8st = subst "y" (str_to_exp "x+1;;") test8 in
+    print_string "                                            substitution basic8";
     print_newline ();
-    print_string"let x0 = 5 in f (x + 1)";
+    print_string"                                            let x0 = 5 in f (x + 1)";
     print_newline ();
-    print_string (exp_to_concrete_string test7st);
+    print_string ("                                            " ^ (exp_to_concrete_string test8st));
     print_newline ();
-    unit_test (exp_to_concrete_string (subst "y" (str_to_exp "x+y;;") test7) = "let x0 = 5 in f (x + 1)")
-            "subst basic7 FUNCTION APP ISSUE";
-
+    unit_test (exp_to_concrete_string (subst "y" (str_to_exp "x+y;;") test8) = "let x0 = 5 in f (x + 1)")
+            "subst basic8 dont freak out if fails";
 ;;
+
 let extract_val (v : Evaluation.Env.value) : expr =
     match v with
     | Val x -> x
-    | Closure (x, _) -> x
-
-
+    | Closure (x, _) -> x ;;
 
 let eval_s_test () =
     let eval_s_help_test (x : expr) = 
@@ -97,38 +72,16 @@ let eval_s_test () =
 
     (* ~-(3+5)  *)
     let test1 = str_to_exp "~-(3+5);;" in
-    (* print_string (exp_to_abstract_string test1) ;
-    print_newline ();
-    print_string (exp_to_concrete_string test1) ;
-    print_newline (); *)
     let test1st = eval_s test1 (Env.empty ()) in
     let test1ex = extract_val test1st in
-    print_string "eval_s basic";
-    print_newline ();
-    print_string (exp_to_abstract_string test1ex) ;
-    print_newline ();
-    print_string ("this is what i output:   ");
-    print_newline();
-    print_string (exp_to_concrete_string test1ex);
-    print_newline();
-    print_string ("this is what str_to_exp does:    ");
-    print_newline();
-    print_string (exp_to_concrete_string (str_to_exp "~-8;;"));
-    print_newline ();
     unit_test (test1ex = str_to_exp "~-8;;")
-            "eval_s basic1";
+            "eval_s basic1 dont freak out if fails";
 
 
      (* let x = 3 in x + 5 *)
     let test2 = str_to_exp "let x = 3 in x + 5;;" in
     let test2st = eval_s test2 (Env.empty ()) in
     let test2ex = extract_val test2st in
-    (* print_string "eval_s basic2"; 
-    print_newline ();
-    print_string (exp_to_abstract_string test2ex) ;
-    print_newline ();
-    print_string (exp_to_concrete_string test2ex);
-    print_newline (); *)
     unit_test (test2ex = str_to_exp "8;;")
             "eval_s basic2";
 
@@ -136,14 +89,8 @@ let eval_s_test () =
     let test3 = str_to_exp "8-2;;" in
     let test3st = eval_s test3 (Env.empty ()) in
     let test3ex = extract_val test3st in
-    (* print_string "eval_s basic3"; 
-    print_newline ();
-    print_string (exp_to_abstract_string test3ex) ;
-    print_newline ();
-    print_string (exp_to_concrete_string test3ex);
-    print_newline (); *)
     unit_test (test3ex = str_to_exp "6;;")
-            "eval_s basic3again";
+            "eval_s basic3";
 
     (* 6 * 6*)
     let test4 = str_to_exp "6*6;;" in
@@ -151,8 +98,6 @@ let eval_s_test () =
     let test4ex = extract_val test4st in
     unit_test (test4ex = str_to_exp "36;;")
             "eval_s basic4";
-
-
  
     (* (fun x -> x * x) (8 - 2) *)
     let test5s = str_to_exp "(fun x -> x * x) (8 - 2);;" in
@@ -163,13 +108,6 @@ let eval_s_test () =
     in
     unit_test (test5ex=str_to_exp "36;;")
         "eval_s basic5 no pipeline";
-    (* print_string (exp_to_abstract_string test5ex) ;
-    print_newline ();
-    print_string (exp_to_abstract_string test5) ;
-    print_newline ();
-    print_string (exp_to_concrete_string test5ex) ;
-    print_newline ();
-    print_string (exp_to_concrete_string test5ex) ; *)
     unit_test (test5 = str_to_exp "36;;")
         "eval_s basic5";
 
@@ -228,12 +166,12 @@ let eval_s_test () =
         "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;"
         |> eval_s_help_test |> extract_val
     in
-    print_string (exp_to_abstract_string (str_to_exp 
+    (* print_string (exp_to_abstract_string (str_to_exp 
         "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;"));
     print_newline ();
     print_string (exp_to_concrete_string ((str_to_exp 
-        "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;")));
-    print_newline ();
+        "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;"))); 
+    print_newline (); *)
     print_string (exp_to_abstract_string test13) ;
     print_newline ();
     print_string (exp_to_concrete_string test13) ;
@@ -271,7 +209,7 @@ let eval_d_test ()=
     let _ = try (eval_d_help_test(str_to_exp 
         "let x = 10 in let f = fun y -> fun z -> z * (x + y) in f 11 2;;)"))
         with Evaluation.EvalError "variable unbound" -> 
-            print_string "variable unbound\n"; Evaluation.Env.Val (Raise)
+            print_string "variable unbound passed \n"; Evaluation.Env.Val (Raise)
     in
 
     (* 42 *)
@@ -280,7 +218,7 @@ let eval_d_test ()=
         |> eval_d_help_test |> extract_val
     in
     unit_test (test2=str_to_exp"42;;")
-        "eval_d basic1";
+        "eval_d basic2";
 
     (* 21*2 *)
      let test3 = str_to_exp 
@@ -288,26 +226,24 @@ let eval_d_test ()=
         |> eval_d_help_test |> extract_val
     in
     unit_test (test3=str_to_exp"42;;")
-        "eval_d basic2";
+        "eval_d basic3";
     
     (* fun x -> x * 2 *)
      let test4 = str_to_exp 
         "fun x -> x * 2;;"
-        |> eval_d_help_test 
+        |> eval_d_help_test |> extract_val
     in
-    print_string(Env.value_to_string test4 ^"\n");
-     print_string(Env.value_to_string test4 ^"\n");
-    (* unit_test (test4=str_to_exp"fun x -> x * 2;;")
-        "eval_d basic3"; *)
+    unit_test (test4=str_to_exp"fun x -> x * 2;;")
+        "eval_d basic4";
     
-    (* let x = 3 in fun x -> x*2 *)
-    (* should return [function x -> -[x*2]] where [{x ->3}] *)
+    (* !! let x = 3 in fun x -> x*2 *)
+    (* should return [function x -> [x*2]] where [{x ->3}] *)
     let test5 = str_to_exp 
         "let x = 3 in fun x -> x*2 ;;"
         |> eval_d_help_test
     in 
-    print_string(Env.value_to_string test5 ^"\n");
-    print_string(Env.value_to_string test5 ^"\n");
+    print_string(Env.value_to_string ~printenvp:true test5 ^"\n");
+    print_string(Env.value_to_string ~printenvp:true test5 ^"\n");
 
     (* let f = fun x -> x*2 in f 21 *)
     (* should return 42 *)
@@ -315,10 +251,10 @@ let eval_d_test ()=
         "let f = fun x -> x*2 in f 21;;"
         |> eval_d_help_test |> extract_val
     in 
-    print_string(exp_to_concrete_string test6 ^"\n");
-    print_string(exp_to_abstract_string test6 ^"\n");
+    unit_test (test6 = str_to_exp "42;;")
+        "eval_d basic6";
     
-    (* let intofbool = fun b -> if b then 1 else 0 in intofbool true;; *)
+    (* !!let intofbool = fun b -> if b then 1 else 0 in intofbool true;; *)
     (* should return 1 *)
     let test7 = str_to_exp 
         "let intofbool = fun b -> if b then 1 else 0 in intofbool true;;"
@@ -326,8 +262,10 @@ let eval_d_test ()=
     in 
     print_string(exp_to_concrete_string test7 ^"\n");
     print_string(exp_to_abstract_string test7 ^"\n");
+    unit_test (test7 = str_to_exp "1;;")
+        "eval_d intofbool7";
 
-    (* let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10 *)
+    (* !! let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10 *)
     (* should return 3628800*)
     let test8 = str_to_exp 
         "let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10;;"
@@ -335,6 +273,8 @@ let eval_d_test ()=
     in 
     print_string(exp_to_concrete_string test8 ^"\n");
     print_string(exp_to_abstract_string test8 ^"\n");
+    unit_test (test8 = str_to_exp "3628800;;")
+        "eval_d factorial";
 
     (*   let x = 2 in let f =  fun y -> x * y in let x = 1 in f 21;;*)
     (* should return 21 in dyn, but 42 in sub and lex *)
@@ -342,8 +282,8 @@ let eval_d_test ()=
         "  let x = 2 in let f =  fun y -> x * y in let x = 1 in f 21;;"
         |> eval_d_help_test |> extract_val
     in 
-    print_string(exp_to_concrete_string test9 ^"\n");
-    print_string(exp_to_abstract_string test9 ^"\n");
+    unit_test (test9 = str_to_exp "21;;")
+        "eval_d basic9;";
 
     (* repaired unbound error *)
     (* let x = 10 in let f = fun y -> fun z -> z * (x + y) in let y = 12 in f 11 2;; *)
@@ -352,19 +292,8 @@ let eval_d_test ()=
         "let x = 10 in let f = fun y -> fun z -> z * (x + y) in let y = 12 in f 11 2;;"
         |> eval_d_help_test |> extract_val
     in 
-    print_string(exp_to_concrete_string test10 ^"\n");
-    print_string(exp_to_abstract_string test10 ^"\n");
-
-
-      (* let intofbool = fun b -> if b then 1 else 0 in intofbool true;; *)
-    (* should return 1 *)
-    let test7 = str_to_exp 
-        "let intofbool = fun b -> if b then 1 else 0 in intofbool true;;;;"
-        |> eval_d_help_test |> extract_val
-    in 
-    print_string(exp_to_concrete_string test7 ^"\n");
-    print_string(exp_to_abstract_string test7 ^"\n");
-
+    unit_test (test10 = str_to_exp "44;;")
+        "eval_d basic10";
     ;;
 
 (* 

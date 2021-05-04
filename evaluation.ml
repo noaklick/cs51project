@@ -174,18 +174,18 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
     raise errors Unassigned *)
     | Letrec (x, d, b) -> 
         let vd =  
-            print_string "we get to 177\n";
+            (* print_string "we get to 177\n"; *)
             eval_s_help d in
-             print_string "we get to 179\n";
+             (* print_string "we get to 179\n"; *)
         let close = 
-            print_string "we get to 181\n";
+            (* print_string "we get to 181\n"; *)
             subst x (Letrec (x, vd, Var (x))) vd in
-             print_string "we get to 183\n";
+             (* print_string "we get to 183\n"; *)
         let bclose = 
-              print_string "we get to 185\n";
+              (* print_string "we get to 185\n"; *)
               subst x close b in
-               print_string "we get to 187\n";
-               print_string (exp_to_abstract_string bclose ^"\n");
+               (* print_string "we get to 187\n"; *)
+               (* print_string (exp_to_abstract_string bclose ^"\n"); *)
                print_string (exp_to_concrete_string bclose ^"\n");
         (* bclose *)
         eval_s_help bclose
@@ -225,7 +225,9 @@ let rec eval_d (exp : expr) (env : Env.env) : Env.value =
     | Equals, Bool x1, Bool x2 -> Bool (x1 = x2)
     | LessThan, Num x1, Num x2 -> Bool (x1 < x2)
     | LessThan, Bool x1, Bool x2 -> Bool (x1 = x2)
-    | _, _, _ -> Raise
+    | _, _, _ -> 
+      print_string "aha line 229 is the problem\n";
+      Raise
   in
 
   let unop_eval_d (op : unop) (v : expr) : expr = 
@@ -244,12 +246,16 @@ let rec eval_d (exp : expr) (env : Env.env) : Env.value =
     | Unop (x, y) ->
        Env.Val (unop_eval_d x (extract_val (eval_d y env)))
     | Binop (b, x, y) -> 
-      Env.Val (binop_eval_d b (extract_val (eval_d x env))( extract_val (eval_d y env)))
+      Env.Val (binop_eval_d b (extract_val (eval_d x env))(extract_val (eval_d y env)))
     | Conditional (i, t, e) -> 
         (match i with
         | Bool x -> if x then (eval_d t env) else (eval_d e env)
-        | _ -> Env.Val (Raise))
-    | Fun (v, e) -> Env. Val (Fun (v, e))
+        | _ -> 
+           print_string ((exp_to_concrete_string i) ^ "\n");
+           print_string ((exp_to_abstract_string i)^ "\n");
+           print_string "aha line 254 is the problem\n";
+          Env.Val (Raise))
+    | Fun (v, e) -> Env.Val (Fun (v, e))
     | Let (x, d, b) -> 
         let vd = eval_d d env in
         let vb = eval_d b (Env.extend env x (ref vd)) in
@@ -295,7 +301,7 @@ let rec eval_l (exp : expr) (env : Env.env) : Env.value =
     | _, _ -> Raise
   in
 
-  (* let rec eval_d_help (v : expr) (en : Env.env) : expr = *)
+  (* let rec eval_l_help (v : expr) (en : Env.env) : expr = *)
     match exp with
     | Var x -> Env.lookup env x
     | Num x -> Env.Val (Num x)
@@ -351,4 +357,7 @@ let eval_e _ =
    above, not the `evaluate` function, so it doesn't matter how it's
    set when you submit your solution.) *)
    
-let evaluate = eval_d ;;
+let evaluate = eval_t ;;
+let evaluate_s = eval_s ;;
+let evaluate_d = eval_d ;;
+let evaluate_l = eval_l ;;
