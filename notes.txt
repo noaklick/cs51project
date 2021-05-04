@@ -1,6 +1,9 @@
 QUESTIONS:
+1) !!! typing for eval_d how to think through
+2) !! letrec for eval_s
+3) ! the z rule for subst!! specifically function app and my failing test
 1) is there an example i can test the z rules in subst with?
-9) instructions for env module
+
 
 Answered:
 XX 2) fresh var is there a specific thing it should be?
@@ -9,6 +12,7 @@ XX 4) are the only binops + - * = < ? we dont need a divide?
 XX 7) how to test subst if it outputs an env?
 XX 6) rules for conditionals?
 XX 5) do we just have an exception be a Raise if you try to add non-nums?
+XX 9) instructions for env module
 
 
 
@@ -19,22 +23,20 @@ conditionals:
 if has to be bool!!
   only if t then second else if f then third
 
-test free_vars
-test subst
-subst
-eval_s LOOK AT LAB9!!!! make sure to accound for unbound var
-test eval_s
-fill out the Env module
-eval_d
-test eval_d
+eval_d !! types???
 extension (eval_l)
+fix letrec on eval_s
 writeup
 clean up design by far on the string ones
 
-next: test substitution (do the unit testing framework, use the tests
-  from lab and the textbook and ed)
+done but need testing:
+eval_s
+subst
+free_vars ((lab 9 exercise 11!!))
+env module
 
-
+eval_s issues:
+  letrec
 
 exp match 
  match exp with

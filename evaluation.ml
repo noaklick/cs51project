@@ -68,61 +68,30 @@ module Env : ENV =
     let empty () : env = []
 
     let close (exp : expr) (env : env) : value =
-    (* return closure containing expr and env *)
       Closure (exp, env)
 
-    (* lookup env varid -- Returns the value in the `env` for the
-       `varid`, raising an `Eval_error` if not found *)
     let lookup (env : env) (varname : varid) : value =
-    (* look for varname in list and if you find it in the env then return the value stored in it
-    else raise EvalError *)
-      
       !(List.assoc varname env)
-      (* let lookup_help ((id, _) : varid * value ref) : bool = 
-        id = varname
-      in
-
-      match List.find_opt (lookup_help) env with 
-      | None -> raise (EvalError "closure error")
-      | Some (id, r) -> !r *)
-
+     
     let extend (env : env) (varname : varid) (loc : value ref) : env =
       (varname, loc) :: List.remove_assoc varname env
-      (* match (List.assoc_opt varname env) with
-      | None -> (varname, loc) :: env
-      | Some r -> r := !loc; env *)
    
     let rec value_to_string ?(printenvp : bool = true) (v : value) : string =
-      (* if printenvp is true then print the whole environment
-      else print the concrete *)
-      (* if printenvp then env
-      List.iter (Printf.printf "%d") *)
       match v with
       | Val v -> exp_to_concrete_string v
       | Closure (v, e) -> 
           if printenvp then 
             "[" ^ exp_to_concrete_string v ^ " where " ^ env_to_string e ^ "]"
           else exp_to_concrete_string v
-      (* if printevnp is false then print value and enpty string *)
-(* string * value ref list *)
-(* [list, each elt, make it into a string, and then map that over the list,
-and then concat all of those strings
-string module  ] *)
-(* expr -> concrete where environ to string *)
-
-      (* call environment *)
-    
 
     and env_to_string (env : env) : string =
-    (* they can call each other *)
-    (* prints the whole environment (list of pairs) *)
       let rec list_to_string (e : env) : string =
         match e with
         | [] -> ""
         | (v, r) :: tl -> "{" ^ v ^ "->" ^ (value_to_string !r) ^ "}" ^ (list_to_string tl)
       in
       "[" ^ list_to_string env ^ "]"
-        (* call value *)
+
   end
 ;;
 
@@ -182,22 +151,25 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
     | Num x -> Num x
     | Bool x -> Bool x
     | Unop (x, y) ->
-       unop_eval_s x (eval_s_help y)
+       eval_s_help (unop_eval_s x (eval_s_help y))
     | Binop (b, x, y) -> 
-      binop_eval_s b (eval_s_help x) (eval_s_help y)
+      eval_s_help (binop_eval_s b (eval_s_help x) (eval_s_help y))
     | Conditional (i, t, e) -> 
         (match i with
         | Bool x -> if x then eval_s_help t else eval_s_help e
         | _ -> Raise)
     | Fun (v, e) -> Fun (v, e)
-    | Let (v, e1, e2) -> subst v (eval_s_help e1) e2
-    (* update when i figure this out! *)
-    | Letrec (v, e1, e2) -> subst v (eval_s_help e1) e2
+    | Let (v, e1, e2) -> eval_s_help (subst v (eval_s_help e1) e2)
+
+    (* update when i figure this out! use unassigned? is this right? *)
+    | Letrec (v, e1, e2) -> subst v (subst v (eval_s_help e1) (Var v)) e2
+      (* subst v (eval_s_help e1) e2 *)
+
     | Raise ->  Raise
     | Unassigned -> Unassigned
     | App (e1, e2) -> 
        (match eval_s_help e1 with
-        | Fun (x, b) -> subst x (eval_s_help e2) b
+        | Fun (x, b) -> eval_s_help (subst x (eval_s_help e2) b)
         | _ -> Raise)
   in
   Env.Val (eval_s_help exp) ;;
@@ -206,8 +178,56 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
 (* The DYNAMICALLY-SCOPED ENVIRONMENT MODEL evaluator -- to be
    completed *)
    
-let eval_d (_exp : expr) (_env : Env.env) : Env.value =
+let rec eval_d (exp : expr) (env : Env.env) : Env.value =
   failwith "eval_d not implemented" ;;
+   (* let binop_eval_d  (op : binop) (v1 : expr) (v2 : expr) : expr = 
+    match op, v1, v2 with
+    | Plus, Num x1, Num x2 -> Num (x1 + x2)
+    | Minus, Num x1, Num x2 -> Num (x1 - x2)
+    | Times, Num x1, Num x2 -> Num (x1 * x2)
+    | Equals, Num x1, Num x2 -> Bool (x1 = x2)
+    | Equals, Bool x1, Bool x2 -> Bool (x1 = x2)
+    | LessThan, Num x1, Num x2 -> Bool (x1 < x2)
+    | LessThan, Bool x1, Bool x2 -> Bool (x1 = x2)
+    | _, _, _ -> Raise
+  in
+
+  let unop_eval_d (op : unop) (v : expr) : expr = 
+    match op, v with
+    | Negate, Num x -> Num (~-x)
+    | _, _ -> Raise
+  in
+
+  (* let rec eval_d_help (v : expr) (en : Env.env) : expr = *)
+  (* use env.extend *)
+    match exp with
+    | Var x -> Env.lookup env x
+    | Num x -> Env.Val (Num x)
+    | Bool x -> Env.Val (Bool x)
+    | Unop (x, y) ->
+       Env.Val (unop_eval_d x (eval_d y env))
+    | Binop (b, x, y) -> 
+      binop_eval_d b (eval_d_help x en) (eval_d_help y en)
+    | Conditional (i, t, e) -> 
+        (match i with
+        | Bool x -> if x then (eval_d_help t en) else (eval_d_help e en)
+        | _ -> Raise)
+    | Fun (v, e) -> Fun (v, e)
+    | Let (v, e1, e2) -> eval_d_help e2 (v, Env.Val (eval_d_help e1 en))
+        (* subst v (eval_s_help e1) e2 *)
+    (* update when i figure this out! *)
+    | Letrec (v, e1, e2) -> subst v (eval_s_help e1) e2
+    | Raise ->  Raise
+    | Unassigned -> Unassigned
+    | App (e1, e2) -> 
+       (match eval_s_help e1 with
+        | Fun (x, b) -> subst x (eval_s_help e2) b
+        | _ -> Raise) *)
+  (* in *)
+  (* match exp with
+  | Var x -> Env.lookup e x
+  | _ -> Env.Val (eval_d_help exp env) ;; *) 
+  ;;
        
 (* The LEXICALLY-SCOPED ENVIRONMENT MODEL evaluator -- optionally
    completed as (part of) your extension *)
