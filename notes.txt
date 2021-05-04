@@ -5,7 +5,6 @@ Before OH:
 design: eval_d, subst, string
 
 left to do:
-  float
   writeup
   go through and check that i'm following EACH RULE and didn't accidentally get a few mixed up
   do some more eval_l tests to be totally sure

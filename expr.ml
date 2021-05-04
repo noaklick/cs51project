@@ -25,6 +25,7 @@ type varid = string ;;
 type expr =
   | Var of varid                         (* variables *)
   | Num of int                           (* integers *)
+  | Float of float                       (* floats - added for extension *)
   | Bool of bool                         (* booleans *)
   | Unop of unop * expr                  (* unary operators *)
   | Binop of binop * expr * expr         (* binary operators *)
@@ -65,6 +66,7 @@ let rec free_vars (exp : expr) : varidset =
    match exp with
   | Var x -> SS.singleton x
   | Num _ -> SS.empty
+  | Float _ -> SS.empty
   | Bool _ -> SS.empty
   | Unop (_, y) -> free_vars y
   | Binop (_, x, y) -> SS.union (free_vars x) (free_vars y)
@@ -85,7 +87,7 @@ let new_varname : unit -> varid =
   let suffix = ref ~-1 in
   fun () ->
     suffix := !suffix + 1;
-    "x" ^ string_of_int !suffix ;;
+    "var" ^ string_of_int !suffix ;;
 
 (*......................................................................
   Substitution 
@@ -107,6 +109,7 @@ let rec subst (var_name : varid) (repl : expr) (exp : expr) : expr =
   match exp with
   | Var x -> if x = var_name then repl else Var x 
   | Num x -> Num x
+  | Float x -> Float x
   | Bool x -> Bool x
   | Unop (x, y) -> Unop (x, subst_help y)
   | Binop (b, x, y) -> Binop (b, subst_help x, subst_help y)
@@ -152,6 +155,7 @@ let rec exp_to_concrete_string (exp : expr) : string =
   match exp with 
   | Var x -> x
   | Num x -> string_of_int x
+  | Float x -> string_of_float x
   | Bool x -> string_of_bool x
   | Unop (Negate, y) -> "-" ^ (exp_to_concrete_string y) 
   | Binop (b, x, y) -> 
@@ -202,6 +206,7 @@ let rec exp_to_abstract_string (exp : expr) : string =
   match exp with
   | Var x -> abstract_one "Var" x 
   | Num x -> abstract_one "Num" (string_of_int x)
+  | Float x -> abstract_one "Float" (string_of_float x)
   | Bool x -> abstract_one "Bool" (string_of_bool x)
   | Unop (_, y) -> "Unop (Negate, " ^ exp_to_abstract_string y ^ ")"
   | Binop (b, x, y) -> 

@@ -125,18 +125,28 @@ let eval_t (exp : expr) (_env : Env.env) : Env.value =
   Env.Val exp ;;
 
 (* The SUBSTITUTION MODEL evaluator -- to be completed *)
-let eval_s (exp : expr) (_env : Env.env) : Env.value =
-  let binop_eval_s  (op : binop) (v1 : expr) (v2 : expr) : expr = 
+
+let binop_eval  (op : binop) (v1 : expr) (v2 : expr) : expr = 
     match op, v1, v2 with
     | Plus, Num x1, Num x2 -> Num (x1 + x2)
+    | Plus, Float x1, Float x2 -> Float (x1 +. x2)
+    | Plus, _ , _ -> raise (EvalError "tried to add incompatible types")
     | Minus, Num x1, Num x2 -> Num (x1 - x2)
+    | Minus, Float x1, Float x2 -> Float (x1 -. x2)
+    | Minus, _ , _ -> raise (EvalError "tried to subtract incompatible types")
     | Times, Num x1, Num x2 -> Num (x1 * x2)
+    | Times, Float x1, Float x2 -> Float (x1 *. x2)
+    | Times, _ , _ -> raise (EvalError "tried to multiple incompatible types")
     | Equals, Num x1, Num x2 -> Bool (x1 = x2)
+    | Equals, Float x1, Float x2 -> Bool (x1 = x2)
     | Equals, Bool x1, Bool x2 -> Bool (x1 = x2)
+    | Equals, _ , _ -> raise (EvalError "tried to compare incompatible types")
     | LessThan, Num x1, Num x2 -> Bool (x1 < x2)
     | LessThan, Bool x1, Bool x2 -> Bool (x1 = x2)
-    | _, _, _ -> raise (EvalError "binop not an op")
-  in
+    | LessThan, Float x1, Float x2 -> Bool (x1 = x2)
+    | LessThan, _ , _ -> raise (EvalError "tried to compare incompatible types")
+
+let eval_s (exp : expr) (_env : Env.env) : Env.value =
 
   let unop_eval_s (op : unop) (v : expr) : expr = 
     match op, v with
@@ -148,10 +158,11 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
     match v with
     | Var x -> raise (EvalError "tried to evaluate a variable")
     | Num x -> Num x
+    | Float x -> Float x
     | Bool x -> Bool x
     | Unop (x, y) -> eval_s_help (unop_eval_s x (eval_s_help y))
     | Binop (b, x, y) -> 
-        eval_s_help (binop_eval_s b (eval_s_help x) (eval_s_help y))
+        eval_s_help (binop_eval b (eval_s_help x) (eval_s_help y))
     | Conditional (i, t, e) -> 
         (match eval_s_help i with
         | Bool x -> if x then eval_s_help t else eval_s_help e
@@ -184,17 +195,6 @@ let extract_val (v : Env.value) : expr =
   | Closure (x, y) -> x ;;
    
 let rec eval_d (exp : expr) (env : Env.env) : Env.value =
-  let binop_eval_d  (op : binop) (v1 : expr) (v2 : expr) : expr = 
-    match op, v1, v2 with
-    | Plus, Num x1, Num x2 -> Num (x1 + x2)
-    | Minus, Num x1, Num x2 -> Num (x1 - x2)
-    | Times, Num x1, Num x2 -> Num (x1 * x2)
-    | Equals, Num x1, Num x2 -> Bool (x1 = x2)
-    | Equals, Bool x1, Bool x2 -> Bool (x1 = x2)
-    | LessThan, Num x1, Num x2 -> Bool (x1 < x2)
-    | LessThan, Bool x1, Bool x2 -> Bool (x1 = x2)
-    | _, _, _ -> raise (EvalError "binop not an op")
-  in
 
   let unop_eval_d (op : unop) (v : expr) : expr = 
     match op, v with
@@ -203,14 +203,14 @@ let rec eval_d (exp : expr) (env : Env.env) : Env.value =
   in
 
   let rec eval_d_help (v : expr) (en : Env.env) : expr =
-  (* use env.extend *)
     match v with
     | Var x -> raise (EvalError"something went wrong")
     | Num x -> Num x
+    | Float x -> Float x
     | Bool x -> Bool x
     | Unop (x, y) -> unop_eval_d x (extract_val (eval_d y env))
     | Binop (b, x, y) ->
-        (binop_eval_d b (extract_val (eval_d x env)) (extract_val (eval_d y env)))
+        (binop_eval b (extract_val (eval_d x env)) (extract_val (eval_d y env)))
     | Conditional (i, t, e) -> 
         (match extract_val (eval_d i env) with
         | Bool x -> if x then extract_val (eval_d t env) else extract_val (eval_d e env)
@@ -270,7 +270,7 @@ let rec eval_l (exp : expr) (env : Env.env) : Env.value =
       let vd = eval_l d env_ext in
       x_ref := vd;
       eval_l b env_ext
-    | Num _ | Bool _ | Unop _ | Binop _ | Conditional _ 
+    | Num _ | Float _ | Bool _ | Unop _ | Binop _ | Conditional _ 
     | Raise | Unassigned -> eval_d exp env ;;
   
 
