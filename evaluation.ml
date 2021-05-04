@@ -218,7 +218,8 @@ let rec eval_d (exp : expr) (env : Env.env) : Env.value =
         (binop_eval b (extract_val (eval_d x env)) (extract_val (eval_d y env)))
     | Conditional (i, t, e) -> 
         (match extract_val (eval_d i env) with
-        | Bool x -> if x then extract_val (eval_d t env) else extract_val (eval_d e env)
+        | Bool x -> if x then extract_val (eval_d t env) 
+                    else extract_val (eval_d e env)
         | _ -> raise (EvalError "bool not a conditional"))
     | Fun (v, e) -> Fun (v, e)
     | Let (x, d, b) -> 
@@ -253,30 +254,56 @@ let rec eval_d (exp : expr) (env : Env.env) : Env.value =
    completed as (part of) your extension *)
    
 let rec eval_l (exp : expr) (env : Env.env) : Env.value =
-    match exp with
-    | Var x -> Env.lookup env x
-    | Fun (x, p) -> Closure (Fun (x,p), env)
-    | App (p, q) -> 
-        (match eval_l p env with 
-        | Closure (Fun (x, b), env_l) ->
-            let vq = eval_l q env in 
-            let env_ext = Env.extend env_l x (ref vq) in
-            let vb = eval_l b env_ext in
-            vb
-        | _ -> 
-            raise (EvalError "app did not have a function")) 
-    | Let (x, d, b) -> 
-        let vd = eval_l d env in
-        let vb = eval_l b (Env.extend env x (ref vd)) in
-        vb
-    | Letrec (x, d, b) ->
-      let x_ref = ref (Env.Val Unassigned) in
-      let env_ext = Env.extend env x x_ref in 
-      let vd = eval_l d env_ext in
-      x_ref := vd;
-      eval_l b env_ext
-    | Num _ | Float _ | Bool _ | Unop _ | Binop _ | Conditional _ 
-    | Raise | Unassigned -> eval_d exp env ;;
+
+  let unop_eval_l (op : unop) (v : expr) : expr = 
+    match op, v with
+    | Negate, Num x -> Num (~-x)
+    | _, _ -> raise (EvalError "unop not an op")
+  in
+
+  (* handle all exp -> exp cases *)
+  let eval_l_help (v : expr) (en : Env.env ) : expr =
+    match v with
+    | Num x -> Num x
+    | Float x -> Float x
+    | Bool x -> Bool x
+    | Unop (x, y) -> unop_eval_l x (extract_val (eval_l y env))
+    | Binop (b, x, y) -> 
+      (binop_eval b (extract_val (eval_l x env)) (extract_val (eval_l y env)))
+    | Conditional (i, t, e) ->
+         (match extract_val (eval_l i env) with
+        | Bool x -> if x then extract_val (eval_l t env) 
+                    else extract_val (eval_l e env)
+        | _ -> raise (EvalError "bool not a conditional"))
+    | Raise  -> Raise
+    | Unassigned -> raise (EvalError "tried to evaluate unassigned")
+    | _ -> raise (EvalError "something went wrong")
+  in
+
+  match exp with
+  | Var x -> Env.lookup env x
+  | Fun (x, p) -> Closure (Fun (x,p), env)
+  | App (p, q) -> 
+      (match eval_l p env with 
+      | Closure (Fun (x, b), env_l) ->
+          let vq = eval_l q env in 
+          let env_ext = Env.extend env_l x (ref vq) in
+          let vb = eval_l b env_ext in
+          vb
+      | _ -> 
+          raise (EvalError "app did not have a function")) 
+  | Let (x, d, b) -> 
+      let vd = eval_l d env in
+      let vb = eval_l b (Env.extend env x (ref vd)) in
+      vb
+  | Letrec (x, d, b) ->
+    let x_ref = ref (Env.Val Unassigned) in
+    let env_ext = Env.extend env x x_ref in 
+    let vd = eval_l d env_ext in
+    x_ref := vd;
+    eval_l b env_ext
+  | _ -> Env.Val (eval_l_help exp env)
+    ;;
   
 
 (* The EXTENDED evaluator -- if you want, you can provide your

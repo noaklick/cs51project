@@ -6,10 +6,11 @@ Before OH:
 design: eval_d, subst, string
 
 left to do:
+  comment all my helpers
   writeup : lex, float, greater than
-  add a greater than
   go through and check that i'm following EACH RULE and didn't accidentally get a few mixed up
   do some more eval_l tests to be totally sure
+  test the fresh_var rules using pen and paper (eye roll)
 
 done but need testing:
   free_vars ((lab 9 exercise 11!!))
