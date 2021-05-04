@@ -162,8 +162,17 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
     | Let (v, e1, e2) -> eval_s_help (subst v (eval_s_help e1) e2)
 
     (* update when i figure this out! use unassigned? is this right? *)
-    | Letrec (v, e1, e2) -> subst v (subst v (eval_s_help e1) (Var v)) e2
+    | Letrec (x, d, b) -> 
+      let vd = eval_s_help d in
+        let close = subst x (Letrec (x, vd, Var (x))) vd in
+        let bclose = subst x vd close in
+        eval_s_help bclose
+
+      (* subst v (subst v (eval_s_help e1) (Var v)) e2 *)
+
+
       (* subst v (eval_s_help e1) e2 *)
+
 
     | Raise ->  Raise
     | Unassigned -> Unassigned

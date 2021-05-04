@@ -1,8 +1,8 @@
 QUESTIONS:
 1) !!! typing for eval_d how to think through
 2) !! letrec for eval_s
-3) ! the z rule for subst!! specifically function app and my failing test
-4) eval_s basic 1: negationa acting weird
+3) ! the z rule for subst!! specifically my failing test
+4) eval_s basic 1: negation acting weird
 1) is there an example i can test the z rules in subst with?
 
 
@@ -38,7 +38,8 @@ env module
 
  issues:
   eval_s letrec 
-  subst z rule in fn app
+  subst z ruled
+  negation being weird eval s basic 1 test
 
 exp match 
  match exp with

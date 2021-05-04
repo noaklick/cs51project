@@ -72,14 +72,14 @@ let subst_test () =
     
     (* (let x = 5 in f y) [y -> x + 1] *)
     let test7 = str_to_exp "let x = 5 in f y;;" in
-    (* let test7st = subst "y" (str_to_exp "x+y;;") test7 in
+    let test7st = subst "y" (str_to_exp "x+1;;") test7 in
     print_string "substitution basic7";
     print_newline ();
-    print_string (exp_to_abstract_string test7st) ;
+    print_string"let x0 = 5 in f (x + 1)";
     print_newline ();
     print_string (exp_to_concrete_string test7st);
-    print_newline (); *)
-    unit_test (subst "y" (str_to_exp "x+y;;") test7 = str_to_exp "let x0 = 5 in f (z + 1);;")
+    print_newline ();
+    unit_test (exp_to_concrete_string (subst "y" (str_to_exp "x+y;;") test7) = "let x0 = 5 in f (x + 1)")
             "subst basic7 FUNCTION APP ISSUE";
 
 ;;
@@ -227,6 +227,10 @@ let eval_s_test () =
         "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;"
         |> eval_s_help_test |> extract_val
     in
+    print_string (exp_to_abstract_string test13) ;
+    print_newline ();
+    print_string (exp_to_concrete_string test13) ;
+    print_newline ();
     unit_test (test13=str_to_exp"3628800;;")
         "eval_s basic13 LET REC!!!";
     
@@ -257,7 +261,7 @@ let eval_s_test () =
     let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10 ;;
         should output to 3628800
   *)
-
+(* App (Fun (n, Conditional (Binop (Equals, Var (n), Num (0)), Num (1), Binop (Times, Var (n), App (Var (fact), Binop (Minus, Var (n), Num (1)))))), Num (10)) *)
   (* 
     let x = 2 in let f y = x * y in let x = 1 in f 21;;
     let x = 2 in let f =  fun y -> x * y in let x = 1 in f 21;;

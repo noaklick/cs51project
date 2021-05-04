@@ -125,15 +125,22 @@ let rec subst (var_name : varid) (repl : expr) (exp : expr) : expr =
       else if not (SS.mem v (free_vars repl)) 
         then Let (v, subst var_name repl e1, subst var_name repl e2)
       else let new_var = new_varname () in
-      Let (new_varname (), subst var_name repl e1, 
-          subst v (Var new_var) (subst var_name repl e2))
-    (* HOW TO DO BOTH SUBSTITUTIONS AT ONCE? *)
+      Let (new_var, subst var_name repl e1, subst var_name repl (subst v (Var new_var) e2))
+      (* Let (new_var, subst v repl e1, 
+          subst v (Var new_var) (subst var_name repl e2)) *)
+   (* Let (y, Q, R) varname = x repl = P e2 = R
+      Let(z, subst x p Q, subst y z (subst x p R)
+      Let (new_var, subst varname repl e1, subst v new_var (subst varname repl e2)))
+    *)
+
+
+
   | Letrec (v, e1, e2) -> 
       if v = var_name then Letrec (v, subst var_name repl e1, e2)
      else if not (SS.mem v (free_vars repl)) 
         then Letrec (v, subst var_name repl e1, subst var_name repl e2)
        else let new_var = new_varname () in
-      Letrec (new_varname (), subst var_name repl e1, 
+      Letrec (new_var, subst var_name repl e1, 
           subst v (Var new_var) (subst var_name repl e2))
     (* HOW TO DO BOTH SUBSTITUTIONS AT ONCE? *)
   | Raise -> Raise
@@ -171,7 +178,7 @@ let rec exp_to_concrete_string (exp : expr) : string =
       | Equals -> concrete_binop x y " = "
       | LessThan-> concrete_binop x y " < ")
   | Conditional (i, t, e) -> "if " ^ (exp_to_concrete_string i) ^ " then " ^ 
-                             (exp_to_concrete_string t) ^ "else " ^ 
+                             (exp_to_concrete_string t) ^ " else " ^ 
                              (exp_to_concrete_string e)
   | Fun (v, e) -> "fun " ^ v ^ " -> " ^ (exp_to_concrete_string e)
   | Let (v, e1, e2) -> "let " ^ v ^ " = " ^ (exp_to_concrete_string e1) ^ 
@@ -180,7 +187,8 @@ let rec exp_to_concrete_string (exp : expr) : string =
                           ^ " in " ^ (exp_to_concrete_string e2)
   | Raise ->  "Raise"  
   | Unassigned -> "Unassigned" 
-  | App (e1, e2) -> (exp_to_concrete_string e1) ^ (exp_to_concrete_string e2) ;;
+  | App (e1, e2) ->
+     (exp_to_concrete_string e1) ^ " (" ^ (exp_to_concrete_string e2) ^ ")" ;;
      
 (* exp_to_abstract_string exp -- Return a string representation of the
    abstract syntax of the expression `exp` *)
