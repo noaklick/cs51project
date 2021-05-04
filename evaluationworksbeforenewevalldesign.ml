@@ -1,3 +1,6 @@
+(* everything is working with the better design of eval_d snapshot
+        5/4/21 at 1:40pm *)
+
 (* 
                          CS 51 Final Project
                          MiniML -- Evaluation
@@ -249,9 +252,52 @@ let rec eval_d (exp : expr) (env : Env.env) : Env.value =
    completed as (part of) your extension *)
    
 let rec eval_l (exp : expr) (env : Env.env) : Env.value =
+  let binop_eval_l  (op : binop) (v1 : expr) (v2 : expr) : expr = 
+    match op, v1, v2 with
+    | Plus, Num x1, Num x2 -> Num (x1 + x2)
+    | Minus, Num x1, Num x2 -> Num (x1 - x2)
+    | Times, Num x1, Num x2 -> Num (x1 * x2)
+    | Equals, Num x1, Num x2 -> Bool (x1 = x2)
+    | Equals, Bool x1, Bool x2 -> Bool (x1 = x2)
+    | LessThan, Num x1, Num x2 -> Bool (x1 < x2)
+    | LessThan, Bool x1, Bool x2 -> Bool (x1 = x2)
+    | _, _, _ -> Raise
+  in
+
+  let unop_eval_l (op : unop) (v : expr) : expr = 
+    match op, v with
+    | Negate, Num x -> Num (~-x)
+    | _, _ -> Raise
+  in
+
+  (* let rec eval_l_help (v : expr) (en : Env.env) : expr = *)
     match exp with
     | Var x -> Env.lookup env x
+    | Num x -> Env.Val (Num x)
+    | Bool x -> Env.Val (Bool x)
+    | Unop (x, y) ->
+        Env.Val (unop_eval_l x (extract_val (eval_l y env)))
+    | Binop (b, x, y) -> 
+        Env.Val (binop_eval_l b 
+          (extract_val (eval_l x env)) (extract_val (eval_l y env)))
+    | Conditional (i, t, e) -> 
+        (match extract_val (eval_l i env) with
+        | Bool x -> if x then (eval_l t env) else (eval_l e env)
+        | _ -> raise (EvalError "conditonal isn't a bool"))
     | Fun (x, p) -> Closure (Fun (x,p), env)
+    | Let (x, d, b) -> 
+        let vd = eval_l d env in
+        let vb = eval_l b (Env.extend env x (ref vd)) in
+        vb
+    (* update when i figure this out! *)
+    | Letrec (x, d, b) ->
+      let x_ref = ref (Env.Val Unassigned) in
+      let env_ext = Env.extend env x x_ref in 
+      let vd = eval_l d env_ext in
+      x_ref := vd;
+      eval_l b env_ext
+    | Raise -> Env.Val (Raise)
+    | Unassigned -> raise (EvalError "tried to evaluate unassigned")
     | App (p, q) -> 
         (match eval_l p env with 
         | Closure (Fun (x, b), env_l) ->
@@ -261,18 +307,7 @@ let rec eval_l (exp : expr) (env : Env.env) : Env.value =
             vb
         | _ -> 
             raise (EvalError "app did not have a function")) 
-    | Let (x, d, b) -> 
-        let vd = eval_l d env in
-        let vb = eval_l b (Env.extend env x (ref vd)) in
-        vb
-    | Letrec (x, d, b) ->
-      let x_ref = ref (Env.Val Unassigned) in
-      let env_ext = Env.extend env x x_ref in 
-      let vd = eval_l d env_ext in
-      x_ref := vd;
-      eval_l b env_ext
-    | Num _ | Bool _ | Unop _ | Binop _ | Conditional _ 
-    | Raise | Unassigned -> eval_d exp env ;;
+  
   
   (* failwith "eval_l not implemented" ;; *)
 

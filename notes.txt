@@ -1,18 +1,18 @@
 QUESTIONS:
 3) ! how do i print the environment of just a value as per 2:42 in the video? 
 4) my tests that fail but seem fine: negation and the fresh_var
+5) is it reasonable how i do eval_l?
 
 Before OH:
 design: eval_d, subst, string
 
 left to do:
-  eval_d design
-  eval_l and eval_d consolidation
   float
   writeup
   subst design (have a helper that substs with varname and repl)
   clean up design by far on the string ones
   go through and check that i'm following EACH RULE and didn't accidentally get a few mixed up
+    do some more eval_l tests to be totally sure
 
 done but need testing:
   subst
@@ -54,6 +54,23 @@ XX 1) !! conditionals in eval_d not working (see intofbool)
 XX 2) !! letrec for all eval  / subst!? 
   is it in conditonals? free_vars? in subst? can't figure it out? 
     example to show: let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10;;
+
+
+what do eval_l and eval_d share?
+  binop
+  unop
+  num 
+  bool 
+  conditional 
+  let?
+  letrec
+  raise
+  unassigned
+
+NOT
+  VAR
+  FUN
+  APP
 
 
 
