@@ -296,42 +296,157 @@ let eval_d_test ()=
         "eval_d basic10";
     ;;
 
-(* 
-    let intofbool = fun b -> if b then 1 else 0 in intofbool true;;
- *)
 
- (*  let rec fact n = if n = 0 then 1 else n * fact (n-1) in fact 10 ;;
-    let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10 ;;
-        should output to 3628800
-  *)
-(* App (Fun (n, Conditional (Binop (Equals, Var (n), Num (0)), Num (1), Binop (Times, Var (n), App (Var (fact), Binop (Minus, Var (n), Num (1)))))), Num (10)) *)
-  (* 
-    let x = 2 in let f y = x * y in let x = 1 in f 21;;
-    let x = 2 in let f =  fun y -> x * y in let x = 1 in f 21;;
-        s should be 42
-        d should be 21
-        l should be 42
+    (*  eval_l_test(); make sure to test the 7:24 case that should eval to 42 *)
+let eval_l_test () =
+    let eval_l_help_test (x : expr) = 
+        eval_l x (Env.empty())
+    in
 
-   *)
+    (* ~-(3+5)  *)
+    let test1 = str_to_exp "~-(3+5);;" in
+    let test1st = eval_l test1 (Env.empty ()) in
+    let test1ex = extract_val test1st in
+    unit_test (test1ex = str_to_exp "~-8;;")
+            "eval_l basic1 dont freak out if fails";
 
-   (* 
-        let x = 10 in let f y = fun z -> z * (x + y) in f 11 2;;
-         let x = 10 in let f = fun y -> fun z -> z * (x + y) in f 11 2;;
-        s 42
-        d unbound
-        l 42
 
-let x = 10 in let f y = fun z -> z * (x + y) in let y = 12 in f 11 2;;
-let x = 10 in let f = fun y -> fun z -> z * (x + y) in let y = 12 in f 11 2;;
-        s 42
-        d 44
-        l 42
-   
-    *)
+     (* let x = 3 in x + 5 *)
+    let test2 = str_to_exp "let x = 3 in x + 5;;" in
+    let test2st = eval_l test2 (Env.empty ()) in
+    let test2ex = extract_val test2st in
+    unit_test (test2ex = str_to_exp "8;;")
+            "eval_l basic2";
+
+    (* 8-2*)
+    let test3 = str_to_exp "8-2;;" in
+    let test3st = eval_l test3 (Env.empty ()) in
+    let test3ex = extract_val test3st in
+    unit_test (test3ex = str_to_exp "6;;")
+            "eval_l basic3";
+
+    (* 6 * 6*)
+    let test4 = str_to_exp "6*6;;" in
+    let test4st = eval_l test4 (Env.empty ()) in
+    let test4ex = extract_val test4st in
+    unit_test (test4ex = str_to_exp "36;;")
+            "eval_l basic4";
+ 
+    (* (fun x -> x * x) (8 - 2) *)
+    let test5s = str_to_exp "(fun x -> x * x) (8 - 2);;" in
+    let test5t = eval_l test5s (Env.empty ()) in
+    let test5ex = extract_val test5t in
+    let test5 = str_to_exp "(fun x -> x * x) (8 - 2);;" 
+        |> eval_l_help_test |> extract_val
+    in
+    unit_test (test5ex=str_to_exp "36;;")
+        "eval_l basic5 no pipeline";
+    unit_test (test5 = str_to_exp "36;;")
+        "eval_l basic5";
+
+    (*   let x = 3 + 5 in (fun x -> x * x) (x - 2) *)
+    let test6 = str_to_exp "let x = 3 + 5 in (fun x -> x * x) (x - 2);;" 
+        |> eval_l_help_test |> extract_val
+    in
+    unit_test (test6=str_to_exp"36;;")
+        "eval_l basic6";
+
+    (* let x = 51 in let x = 124 in x  *)
+    let test7 = str_to_exp "let x = 51 in let x = 124 in x ;;"
+        |> eval_l_help_test |> extract_val
+    in
+    unit_test (test7=str_to_exp"124;;")
+        "eval_l basic7";
+
+    (* let x = 6 in let y = 3 in x * y  *)
+    let test8 = str_to_exp "let x = 6 in let y = 3 in x * y;;"
+        |> eval_l_help_test |> extract_val
+    in
+    unit_test (test8=str_to_exp"18;;")
+        "eval_l basic8";
+
+    (* fun x -> x *2  *)
+    let test9 = str_to_exp "fun x -> x *2;;"
+        |> eval_l_help_test |> extract_val
+    in
+    unit_test (test9=str_to_exp"fun x -> x *2;;")
+        "eval_l basic9";
+
+    (* let x = 3 in fun x -> x * 2;; *)
+    let test10 = str_to_exp "let x = 3 in fun x -> x * 2;;"
+        |> eval_l_help_test |> extract_val
+    in
+    unit_test (test10=str_to_exp"fun x -> x * 2;;")
+        "eval_l basic10";
+    
+    (* let f = fun x -> x * 2 in f 21 *)
+    let test11 = str_to_exp "let f = fun x -> x * 2 in f 21;;"
+        |> eval_l_help_test |> extract_val
+    in
+    unit_test (test11=str_to_exp"42;;")
+        "eval_l basic11";
+    
+    (* let intofbool = fun b -> if b then 1 else 0 in intofbool true  *)
+    let test12 = str_to_exp 
+        "let intofbool = fun b -> if b then 1 else 0 in intofbool true;;"
+        |> eval_l_help_test |> extract_val
+    in
+    unit_test (test12=str_to_exp"1;;")
+        "eval_l basic12";
+
+    (* let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10  *)
+    let test13 = str_to_exp 
+        "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;"
+        |> eval_l_help_test |> extract_val
+    in
+    (* print_string (exp_to_abstract_string (str_to_exp 
+        "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;"));
+    print_newline ();
+    print_string (exp_to_concrete_string ((str_to_exp 
+        "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;"))); 
+    print_newline (); *)
+    print_string (exp_to_abstract_string test13) ;
+    print_newline ();
+    print_string (exp_to_concrete_string test13) ;
+    print_newline ();
+    unit_test (test13=str_to_exp"3628800;;")
+        "eval_l basic13 LET REC!!!";
+    
+    (* DIFF FOR DYNAMIC!! *)
+    (* let x = 2 in let f =  fun y -> x * y in let x = 1 in f 21 *)
+    let test14 = str_to_exp 
+        "let x = 2 in let f =  fun y -> x * y in let x = 1 in f 21;;"
+        |> eval_l_help_test |> extract_val
+    in
+    unit_test (test14=str_to_exp"42;;")
+        "eval_l basic14 DIFF FOR DYNAMIC";
+
+    (* repaired unbound error *)
+    (* let x = 10 in let f = fun y -> fun z -> z * (x + y) in let y = 12 in f 11 2;; *)
+    (* should return 44 *)
+    let test15 = str_to_exp 
+        "let x = 10 in let f = fun y -> fun z -> z * (x + y) in let y = 12 in f 11 2;;"
+        |> eval_l_help_test |> extract_val
+    in 
+    unit_test (test15 = str_to_exp "42;;")
+        "eval_l repair15";
+
+     (* DIFF FOR DYNAMIC!! *)
+    (* let x = 10 in let f = fun y -> fun z -> z * (x + y) in f 11 2*)
+    let test16 = str_to_exp 
+        "let x = 10 in let f = fun y -> fun z -> z * (x + y) in f 11 2;;"
+        |> eval_l_help_test |> extract_val
+    in
+    unit_test (test16=str_to_exp"42;;")
+        "eval_l dyn error16";
+;;
+
+
 let test_all () = 
     subst_test ();
     eval_s_test ();
-    (* eval_l_test(); make sure to test the 7:24 case that should eval to 42 *)
-    eval_d_test ();;
+    eval_d_test ();
+    eval_l_test();;
+   
 
 let _ = test_all () ;;

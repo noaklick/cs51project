@@ -2,6 +2,7 @@ QUESTIONS:
 1) !! conditionals in eval_d not working (see intofbool)
 2) !! letrec for eval_s / subst!? is it in free_vars? in subst? can't figure it out? 
 3) ! how do i print the environment of just a value as per 2:42 in the video? 
+4) ! eval_l double function app not working (video 8:13)
 
 
 Before OH:
@@ -56,6 +57,7 @@ done and tested :)
   eval_d intofbool / conditionals
   eval_s letrec/eval_d letrec / eval_l letrec
   closure printing on eval_d
+  eval_l double function app
   subst z rules
   negation being weird eval s basic 1 test
 
