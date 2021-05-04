@@ -19,6 +19,7 @@ type binop =
   | Times
   | Equals
   | LessThan
+  | GreaterThan
 ;;
 
 (* Variable identifers *)

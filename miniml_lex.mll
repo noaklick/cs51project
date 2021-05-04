@@ -32,6 +32,7 @@
     create_hashtable 8 [
                        ("=", EQUALS);
                        ("<", LESSTHAN);
+                       (">", GREATERTHAN);
                        (".", DOT);
                        ("->", DOT);
                        (";;", EOF);

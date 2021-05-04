@@ -13,7 +13,7 @@
 %token NEG
 %token PLUS MINUS 
 %token TIMES
-%token LESSTHAN EQUALS
+%token LESSTHAN EQUALS GREATERTHAN
 %token IF THEN ELSE 
 %token FUNCTION
 %token RAISE
@@ -23,7 +23,7 @@
 %token TRUE FALSE
 
 %nonassoc IF
-%left LESSTHAN EQUALS
+%left LESSTHAN EQUALS GREATERTHAN
 %left PLUS MINUS
 %left TIMES
 %nonassoc NEG
@@ -48,6 +48,7 @@ expnoapp: INT                   { Num $1 }
         | exp TIMES exp         { Binop(Times, $1, $3) }
         | exp EQUALS exp        { Binop(Equals, $1, $3) }
         | exp LESSTHAN exp      { Binop(LessThan, $1, $3) }
+        | exp GREATERTHAN exp   { Binop(GreaterThan, $1, $3)}
         | NEG exp               { Unop(Negate, $2) }
         | IF exp THEN exp ELSE exp      { Conditional($2, $4, $6) }
         | LET ID EQUALS exp IN exp      { Let($2, $4, $6) }

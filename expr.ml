@@ -18,6 +18,7 @@ type binop =
   | Times
   | Equals
   | LessThan
+  | GreaterThan
 ;;
 
 type varid = string ;;
@@ -164,7 +165,8 @@ let rec exp_to_concrete_string (exp : expr) : string =
       | Minus -> concrete_binop x y " - "
       | Times -> concrete_binop x y " * "
       | Equals -> concrete_binop x y " = "
-      | LessThan-> concrete_binop x y " < ")
+      | LessThan -> concrete_binop x y " < "
+      | GreaterThan -> concrete_binop x y " > ")
   | Conditional (i, t, e) -> "if " ^ (exp_to_concrete_string i) ^ " then " ^ 
                              (exp_to_concrete_string t) ^ " else " ^ 
                              (exp_to_concrete_string e)
@@ -215,7 +217,8 @@ let rec exp_to_abstract_string (exp : expr) : string =
       | Minus -> abstract_binop x y "Minus"
       | Times -> abstract_binop x y "Times"
       | Equals -> abstract_binop x y "Equals"
-      | LessThan-> abstract_binop x y "LessThan")
+      | LessThan-> abstract_binop x y "LessThan"
+      | GreaterThan -> abstract_binop x y "GreaterThan")
   | Conditional (i, t, e) -> abstract_three_ex "Conditional" i t e
   | Fun (v, e) -> abstract_one "Fun" (v ^ ", " ^ (exp_to_abstract_string e))
   | Let (v, e1, e2) -> abstract_three_st "Let" v e1 e2

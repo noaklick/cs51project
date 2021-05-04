@@ -142,9 +142,14 @@ let binop_eval  (op : binop) (v1 : expr) (v2 : expr) : expr =
     | Equals, Bool x1, Bool x2 -> Bool (x1 = x2)
     | Equals, _ , _ -> raise (EvalError "tried to compare incompatible types")
     | LessThan, Num x1, Num x2 -> Bool (x1 < x2)
-    | LessThan, Bool x1, Bool x2 -> Bool (x1 = x2)
-    | LessThan, Float x1, Float x2 -> Bool (x1 = x2)
+    | LessThan, Bool x1, Bool x2 -> Bool (x1 < x2)
+    | LessThan, Float x1, Float x2 -> Bool (x1 < x2)
     | LessThan, _ , _ -> raise (EvalError "tried to compare incompatible types")
+    | GreaterThan, Num x1, Num x2 -> Bool (x1 > x2)
+    | GreaterThan, Bool x1, Bool x2 -> Bool (x1 > x2)
+    | GreaterThan, Float x1, Float x2 -> Bool (x1 > x2)
+    | GreaterThan, _ , _ -> 
+        raise (EvalError "tried to compare incompatible types")
 
 let eval_s (exp : expr) (_env : Env.env) : Env.value =
 
