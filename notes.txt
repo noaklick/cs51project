@@ -1,12 +1,18 @@
 QUESTIONS:
-1) !!! typing for eval_d how to think through
-2) !! letrec for eval_s
+1) how to do letrec in eval_d? pg 419
+2) !! letrec for eval_s / subst!? is it in free_vars? in subst? can't figure it out? 
 3) ! the z rule for subst!! specifically my failing test
 4) eval_s basic 1: negation acting weird
 1) is there an example i can test the z rules in subst with?
 
 
+Unassigned
+letrec eval_d
+in subst leave it be
+evaluation eval_s raise error
+
 Answered:
+XX 1) !!! typing for eval_d how to think through
 XX 2) fresh var is there a specific thing it should be?
 XX 3) do we need to check that everything is an Num to do binop or unop subst?
 XX 4) are the only binops + - * = < ? we dont need a divide?

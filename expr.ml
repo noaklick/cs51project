@@ -72,7 +72,7 @@ let rec free_vars (exp : expr) : varidset =
      (free_vars e)
   | Fun (v, e) -> SS.remove v (free_vars e)
   | Let (v, e1, e2) -> SS.union (SS.remove v (free_vars e2)) (free_vars e1)
-  | Letrec (v, e1, e2) -> SS.union (SS.remove v (free_vars e2)) (free_vars e1)
+  | Letrec (x, p, q) -> SS.remove x (SS.union (SS.remove x (free_vars q)) (free_vars p))
   | Raise -> SS.empty
   | Unassigned ->SS.empty
   | App (e1, e2) -> SS.union (free_vars e1) (free_vars e2)
@@ -125,7 +125,8 @@ let rec subst (var_name : varid) (repl : expr) (exp : expr) : expr =
       else if not (SS.mem v (free_vars repl)) 
         then Let (v, subst var_name repl e1, subst var_name repl e2)
       else let new_var = new_varname () in
-      Let (new_var, subst var_name repl e1, subst var_name repl (subst v (Var new_var) e2))
+      Let (new_var, subst var_name repl e1, subst var_name repl 
+        (subst v (Var new_var) e2))
       (* Let (new_var, subst v repl e1, 
           subst v (Var new_var) (subst var_name repl e2)) *)
    (* Let (y, Q, R) varname = x repl = P e2 = R
@@ -133,15 +134,13 @@ let rec subst (var_name : varid) (repl : expr) (exp : expr) : expr =
       Let (new_var, subst varname repl e1, subst v new_var (subst varname repl e2)))
     *)
 
-
-
   | Letrec (v, e1, e2) -> 
       if v = var_name then Letrec (v, subst var_name repl e1, e2)
-     else if not (SS.mem v (free_vars repl)) 
+      else if not (SS.mem v (free_vars repl)) 
         then Letrec (v, subst var_name repl e1, subst var_name repl e2)
        else let new_var = new_varname () in
-      Letrec (new_var, subst var_name repl e1, 
-          subst v (Var new_var) (subst var_name repl e2))
+      Letrec (new_var, subst var_name repl e1, subst var_name repl
+          (subst v (Var new_var) e2))
     (* HOW TO DO BOTH SUBSTITUTIONS AT ONCE? *)
   | Raise -> Raise
   | Unassigned -> Unassigned
