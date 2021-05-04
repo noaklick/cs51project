@@ -253,7 +253,7 @@ let rec eval_d (exp : expr) (env : Env.env) : Env.value =
         | _ -> 
            print_string ((exp_to_concrete_string i) ^ "\n");
            print_string ((exp_to_abstract_string i)^ "\n");
-           print_string "aha line 254 is the problem\n";
+           print_string "aha line 256 is the problem\n";
           Env.Val (Raise))
     | Fun (v, e) -> Env.Val (Fun (v, e))
     | Let (x, d, b) -> 
@@ -332,11 +332,12 @@ let rec eval_l (exp : expr) (env : Env.env) : Env.value =
     | App (p, q) -> 
         (match eval_l p env with 
         | Closure (Fun (x, b), env_l) ->
-            let vq = eval_d q env in 
+            let vq = eval_l q env in 
             let env_ext = Env.extend env_l x (ref vq) in
-            let vb = eval_d b env_ext in
+            let vb = eval_l b env_ext in
             vb
-        | _ -> raise (EvalError "app did not have a function")) 
+        | _ -> 
+            raise (EvalError "app did not have a function")) 
   
   
   (* failwith "eval_l not implemented" ;; *)
