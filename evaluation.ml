@@ -125,7 +125,6 @@ let eval_t (exp : expr) (_env : Env.env) : Env.value =
   Env.Val exp ;;
 
 (* The SUBSTITUTION MODEL evaluator -- to be completed *)
-   
 let eval_s (exp : expr) (_env : Env.env) : Env.value =
   let binop_eval_s  (op : binop) (v1 : expr) (v2 : expr) : expr = 
     match op, v1, v2 with
@@ -136,47 +135,34 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
     | Equals, Bool x1, Bool x2 -> Bool (x1 = x2)
     | LessThan, Num x1, Num x2 -> Bool (x1 < x2)
     | LessThan, Bool x1, Bool x2 -> Bool (x1 = x2)
-    | _, _, _ -> 
-        raise (EvalError "binop not an op")
+    | _, _, _ -> raise (EvalError "binop not an op")
   in
 
   let unop_eval_s (op : unop) (v : expr) : expr = 
     match op, v with
     | Negate, Num x -> Num (~-x)
-    | _, _ -> 
-      raise (EvalError "unop not an op")
+    | _, _ -> raise (EvalError "unop not an op")
   in
 
   let rec eval_s_help (v : expr) : expr =
     match v with
-    | Var x -> 
-        raise (EvalError "tried to evaluate a variable")
+    | Var x -> raise (EvalError "tried to evaluate a variable")
     | Num x -> Num x
     | Bool x -> Bool x
-    | Unop (x, y) ->
-       eval_s_help (unop_eval_s x (eval_s_help y))
+    | Unop (x, y) -> eval_s_help (unop_eval_s x (eval_s_help y))
     | Binop (b, x, y) -> 
-      eval_s_help (binop_eval_s b (eval_s_help x) (eval_s_help y))
+        eval_s_help (binop_eval_s b (eval_s_help x) (eval_s_help y))
     | Conditional (i, t, e) -> 
         (match eval_s_help i with
         | Bool x -> if x then eval_s_help t else eval_s_help e
-        | _ -> 
-           raise (EvalError "conditional isn't a bool"))
+        | _ -> raise (EvalError "conditional isn't a bool"))
     | Fun (v, e) -> Fun (v, e)
     | Let (v, e1, e2) -> eval_s_help (subst v (eval_s_help e1) e2)
-
-    (* update when i figure this out! use unassigned? is this right? *)
-    (* use unassigned for free variables
-    raise errors Unassigned *)
     | Letrec (x, d, b) -> 
-        let vd =  
-            eval_s_help d in
-        let close = 
-            subst x (Letrec (x, vd, Var (x))) vd in
-        let bclose = 
-              subst x (eval_s_help close) b in
+        let vd = eval_s_help d in
+        let close = subst x (Letrec (x, vd, Var (x))) vd in
+        let bclose = subst x (eval_s_help close) b in
         eval_s_help bclose
-
     | Raise -> Raise
     | Unassigned -> raise (EvalError "tried to evaluate unassigned")
     | App (p, q) -> 
@@ -186,20 +172,20 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
             eval_s_help (subst x vq b)
         | _ -> raise (EvalError "tried to apply a non function"))
   in
+
   Env.Val (eval_s_help exp) ;;
-  (* failwith "eval_s not implemented" ;; *)
      
 (* The DYNAMICALLY-SCOPED ENVIRONMENT MODEL evaluator -- to be
    completed *)
 
 let extract_val (v : Env.value) : expr =
-    match v with
-    | Val x -> x
-    | Closure (x, y) -> x ;;
+  match v with
+  | Val x -> x
+  | Closure (x, y) -> x ;;
    
 let rec eval_d (exp : expr) (env : Env.env) : Env.value =
   (* failwith "eval_d not implemented" ;; *)
-   let binop_eval_d  (op : binop) (v1 : expr) (v2 : expr) : expr = 
+  let binop_eval_d  (op : binop) (v1 : expr) (v2 : expr) : expr = 
     match op, v1, v2 with
     | Plus, Num x1, Num x2 -> Num (x1 + x2)
     | Minus, Num x1, Num x2 -> Num (x1 - x2)
@@ -214,46 +200,49 @@ let rec eval_d (exp : expr) (env : Env.env) : Env.value =
   let unop_eval_d (op : unop) (v : expr) : expr = 
     match op, v with
     | Negate, Num x -> Num (~-x)
-    | _, _ -> Raise
+    | _, _ -> raise (EvalError "unop not an op")
   in
 
-  (* let rec eval_d_help (v : expr) (en : Env.env) : expr = *)
+  let rec eval_d_help (v : expr) (en : Env.env) : expr =
   (* use env.extend *)
-    match exp with
-    | Var x -> 
-      (try (Env.lookup env x) with Not_found -> raise (EvalError "variable unbound"))
-    | Num x -> Env.Val (Num x)
-    | Bool x -> Env.Val (Bool x)
-    | Unop (x, y) ->
-       Env.Val (unop_eval_d x (extract_val (eval_d y env)))
-    | Binop (b, x, y) -> 
-      Env.Val (binop_eval_d b (extract_val (eval_d x env))(extract_val (eval_d y env)))
+    match v with
+    | Var x -> raise (EvalError"something went wrong")
+    | Num x -> Num x
+    | Bool x -> Bool x
+    | Unop (x, y) -> unop_eval_d x (extract_val (eval_d y env))
+    | Binop (b, x, y) ->
+        (binop_eval_d b (extract_val (eval_d x env)) (extract_val (eval_d y env)))
     | Conditional (i, t, e) -> 
         (match extract_val (eval_d i env) with
-        | Bool x -> if x then (eval_d t env) else (eval_d e env)
+        | Bool x -> if x then extract_val (eval_d t env) else extract_val (eval_d e env)
         | _ -> raise (EvalError "bool not a conditional"))
-    | Fun (v, e) -> Env.Val (Fun (v, e))
+    | Fun (v, e) -> Fun (v, e)
     | Let (x, d, b) -> 
         let vd = eval_d d env in
-        let vb = eval_d b (Env.extend env x (ref vd)) in
+        let vb = extract_val (eval_d b (Env.extend env x (ref vd))) in
         vb
-    (* update when i figure this out! *)
     | Letrec (x, d, b) ->
       let x_ref = ref (Env.Val Unassigned) in
       let env_ext = Env.extend env x x_ref in 
       let vd = eval_d d env_ext in
       x_ref := vd;
-      eval_d b env_ext
-    | Raise -> Env.Val (Raise)
+      extract_val (eval_d b env_ext)
+    | Raise -> Raise
     | Unassigned -> raise (EvalError "tried to evaluate unassigned")
     | App (p, q) -> 
         (match extract_val (eval_d p env) with 
         | Fun (x, b) ->
           let vq = eval_d q env in 
           let env_ext = Env.extend env x (ref vq) in
-          let vb = eval_d b env_ext in
+          let vb = extract_val (eval_d b env_ext) in
           vb
-        | _ -> raise (EvalError "app did not have a function")) 
+        | _ -> raise (EvalError "app did not have a function"))
+  in
+
+  match exp with 
+  | Var x -> (try (Env.lookup env x) 
+              with Not_found -> raise (EvalError "variable unbound"))
+  | _ -> Env.Val (eval_d_help exp env)
   ;;
        
 (* The LEXICALLY-SCOPED ENVIRONMENT MODEL evaluator -- optionally

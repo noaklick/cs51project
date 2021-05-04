@@ -1,20 +1,39 @@
 QUESTIONS:
-2) !! letrec for all eval  / subst!? 
-  is it in conditonals? free_vars? in subst? can't figure it out? 
-    example to show: let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10;;
 3) ! how do i print the environment of just a value as per 2:42 in the video? 
-
+4) my tests that fail but seem fine: negation and the fresh_var
 
 Before OH:
 design: eval_d, subst, string
+
+left to do:
+  eval_d design
+  eval_l and eval_d consolidation
+  float
+  writeup
+  subst design (have a helper that substs with varname and repl)
+  clean up design by far on the string ones
+  go through and check that i'm following EACH RULE and didn't accidentally get a few mixed up
+
+done but need testing:
+  subst
+  free_vars ((lab 9 exercise 11!!))
+  env module
+
+done and tested :)
+  eval_d
+  eval_s
+  eval_l
+
+ issues:
+  closure printing on eval_d
+  subst z rules
+  negation being weird eval s basic 1 test
 
 done before oh:
 x identify where the issue is in eval_s/subst letrec 
 x have a full draft of lexical
 x test dynamic
 x test lexical
-
-
 
 Answered:
 XX 3) ! the z rule for subst!! specifically my failing test. am i doing it right or are my strings just weird?
@@ -32,37 +51,11 @@ XX 5) do we just have an exception be a Raise if you try to add non-nums?
 XX 9) instructions for env module
 XX 1) !! conditionals in eval_d not working (see intofbool)
     example to show: let intofbool = fun b -> if b then 1 else 0 in intofbool true;;
+XX 2) !! letrec for all eval  / subst!? 
+  is it in conditonals? free_vars? in subst? can't figure it out? 
+    example to show: let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10;;
 
 
-
-left to do:
-  NEED HELP: eval_s letrec / eval_s letrec
-  extension (eval_l)
-  float
-  writeup
-  subst design (have a helper that substs with varname and repl)
-  clean up design by far on the string ones
-  design on eval_d (do some more helpers)
-  go through and check that i'm following EACH RULE and didn't accidentally get a few mixed up
-  NEED_HELP: eval_s failing tests
-
-
-
-done but need testing:
-  subst
-  free_vars ((lab 9 exercise 11!!))
-  env module
-
-done and tested :)
-  eval_d
-  eval_s
-  eval_l
-
- issues:
-  eval_s letrec/eval_d letrec / eval_l letrec
-  closure printing on eval_d
-  subst z rules
-  negation being weird eval s basic 1 test
 
 eval_l:
 To fix the dynamic semantics,
