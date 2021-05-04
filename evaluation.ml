@@ -81,7 +81,7 @@ module Env : ENV =
       | Val v -> exp_to_concrete_string v
       | Closure (v, e) -> 
           if printenvp then 
-            "[" ^ exp_to_concrete_string v ^ " where " ^ env_to_string e ^ "]"
+            exp_to_concrete_string v ^ " where [" ^ env_to_string e ^ "]"
           else exp_to_concrete_string v
 
     and env_to_string (env : env) : string =
@@ -164,7 +164,7 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
         (match i with
         | Bool x -> if x then eval_s_help t else eval_s_help e
         | _ -> 
-           print_string "line 167 is the issue";
+           print_string "line 167 is the issue\n";
            Raise)
     | Fun (v, e) -> Fun (v, e)
     | Let (v, e1, e2) -> eval_s_help (subst v (eval_s_help e1) e2)
@@ -173,40 +173,48 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
     (* use unassigned for free variables
     raise errors Unassigned *)
     | Letrec (x, d, b) -> 
-        let vd = eval_s_help d in
-        let close = subst x (Letrec (x, vd, Var (x))) vd in
-        let bclose = subst x close b in
+        let vd =  
+            print_string "we get to 177\n";
+            eval_s_help d in
+             print_string "we get to 179\n";
+        let close = 
+            print_string "we get to 181\n";
+            subst x (Letrec (x, vd, Var (x))) vd in
+             print_string "we get to 183\n";
+        let bclose = 
+              print_string "we get to 185\n";
+              subst x close b in
+               print_string "we get to 187\n";
+               print_string (exp_to_abstract_string bclose ^"\n");
+               print_string (exp_to_concrete_string bclose ^"\n");
         (* bclose *)
         eval_s_help bclose
 
-      (* subst v (subst v (eval_s_help e1) (Var v)) e2 *)
-
-
-      (* subst v (eval_s_help e1) e2 *)
-
-
     | Raise -> 
-          print_string "line 187 is the issue";
+          print_string "line 192 is the issue\n";
           Raise
     | Unassigned -> raise (EvalError "tried to evaluate unassigned")
-    | App (e1, e2) -> 
-       (match eval_s_help e1 with
-        | Fun (x, b) -> eval_s_help (subst x (eval_s_help e2) b)
-        | _ -> Raise)
+    | App (p, q) -> 
+       (match eval_s_help p with
+        | Fun (x, b) -> 
+            let vq = eval_s_help q in
+            eval_s_help (subst x vq b)
+        | _ -> 
+            print_string "line 203 is the culprit grr\n";
+            Raise)
   in
   Env.Val (eval_s_help exp) ;;
   (* failwith "eval_s not implemented" ;; *)
      
 (* The DYNAMICALLY-SCOPED ENVIRONMENT MODEL evaluator -- to be
    completed *)
-   
-let rec eval_d (exp : expr) (env : Env.env) : Env.value =
-  let extract_val (v : Env.value) : expr =
+
+let extract_val (v : Env.value) : expr =
     match v with
     | Val x -> x
-    | Closure (x, y) -> x
-  in
-
+    | Closure (x, y) -> x ;;
+   
+let rec eval_d (exp : expr) (env : Env.env) : Env.value =
   (* failwith "eval_d not implemented" ;; *)
    let binop_eval_d  (op : binop) (v1 : expr) (v2 : expr) : expr = 
     match op, v1, v2 with
@@ -229,7 +237,8 @@ let rec eval_d (exp : expr) (env : Env.env) : Env.value =
   (* let rec eval_d_help (v : expr) (en : Env.env) : expr = *)
   (* use env.extend *)
     match exp with
-    | Var x -> Env.lookup env x
+    | Var x -> 
+      (try (Env.lookup env x) with Not_found -> raise (EvalError "variable unbound"))
     | Num x -> Env.Val (Num x)
     | Bool x -> Env.Val (Bool x)
     | Unop (x, y) ->
@@ -267,8 +276,64 @@ let rec eval_d (exp : expr) (env : Env.env) : Env.value =
 (* The LEXICALLY-SCOPED ENVIRONMENT MODEL evaluator -- optionally
    completed as (part of) your extension *)
    
-let eval_l (_exp : expr) (_env : Env.env) : Env.value =
-  failwith "eval_l not implemented" ;;
+let rec eval_l (exp : expr) (env : Env.env) : Env.value =
+  let binop_eval_l  (op : binop) (v1 : expr) (v2 : expr) : expr = 
+    match op, v1, v2 with
+    | Plus, Num x1, Num x2 -> Num (x1 + x2)
+    | Minus, Num x1, Num x2 -> Num (x1 - x2)
+    | Times, Num x1, Num x2 -> Num (x1 * x2)
+    | Equals, Num x1, Num x2 -> Bool (x1 = x2)
+    | Equals, Bool x1, Bool x2 -> Bool (x1 = x2)
+    | LessThan, Num x1, Num x2 -> Bool (x1 < x2)
+    | LessThan, Bool x1, Bool x2 -> Bool (x1 = x2)
+    | _, _, _ -> Raise
+  in
+
+  let unop_eval_l (op : unop) (v : expr) : expr = 
+    match op, v with
+    | Negate, Num x -> Num (~-x)
+    | _, _ -> Raise
+  in
+
+  (* let rec eval_d_help (v : expr) (en : Env.env) : expr = *)
+    match exp with
+    | Var x -> Env.lookup env x
+    | Num x -> Env.Val (Num x)
+    | Bool x -> Env.Val (Bool x)
+    | Unop (x, y) ->
+        Env.Val (unop_eval_l x (extract_val (eval_l y env)))
+    | Binop (b, x, y) -> 
+        Env.Val (binop_eval_l b 
+          (extract_val (eval_l x env)) (extract_val (eval_l y env)))
+    | Conditional (i, t, e) -> 
+        (match i with
+        | Bool x -> if x then (eval_l t env) else (eval_l e env)
+        | _ -> Env.Val (Raise))
+    | Fun (x, p) -> Closure (Fun (x,p), env)
+    | Let (x, d, b) -> 
+        let vd = eval_l d env in
+        let vb = eval_l b (Env.extend env x (ref vd)) in
+        vb
+    (* update when i figure this out! *)
+    | Letrec (x, d, b) ->
+      let x_ref = ref (Env.Val Unassigned) in
+      let env_ext = Env.extend env x x_ref in 
+      let vd = eval_l d env_ext in
+      x_ref := vd;
+      eval_l b env_ext
+    | Raise -> Env.Val (Raise)
+    | Unassigned -> raise (EvalError "tried to evaluate unassigned")
+    | App (p, q) -> 
+        (match eval_l p env with 
+        | Closure (Fun (x, b), env_l) ->
+            let vq = eval_d q env in 
+            let env_ext = Env.extend env_l x (ref vq) in
+            let vb = eval_d b env_ext in
+            vb
+        | _ -> raise (EvalError "app did not have a function")) 
+  
+  
+  (* failwith "eval_l not implemented" ;; *)
 
 (* The EXTENDED evaluator -- if you want, you can provide your
    extension as a separate evaluator, or if it is type- and
@@ -286,4 +351,4 @@ let eval_e _ =
    above, not the `evaluate` function, so it doesn't matter how it's
    set when you submit your solution.) *)
    
-let evaluate = eval_s ;;
+let evaluate = eval_d ;;

@@ -86,7 +86,8 @@ let subst_test () =
 let extract_val (v : Evaluation.Env.value) : expr =
     match v with
     | Val x -> x
-    | Closure (x, y) -> x
+    | Closure (x, _) -> x
+
 
 
 let eval_s_test () =
@@ -227,6 +228,12 @@ let eval_s_test () =
         "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;"
         |> eval_s_help_test |> extract_val
     in
+    print_string (exp_to_abstract_string (str_to_exp 
+        "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;"));
+    print_newline ();
+    print_string (exp_to_concrete_string ((str_to_exp 
+        "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;")));
+    print_newline ();
     print_string (exp_to_abstract_string test13) ;
     print_newline ();
     print_string (exp_to_concrete_string test13) ;
@@ -252,6 +259,113 @@ let eval_s_test () =
     unit_test (test15=str_to_exp"42;;")
         "eval_s basic15 DIFF FOR DYNAMIC";
 ;;
+
+let eval_d_test ()=
+    let eval_d_help_test (x : expr) = 
+        eval_d x (Env.empty())
+    in
+
+      (* DIFF FOR DYNAMIC!! 42 in sub and lex, doesn't work in dyn
+        this is a test i have to solve *)
+    (* let x = 10 in let f = fun y -> fun z -> z * (x + y) in f 11 2 *)
+    let _ = try (eval_d_help_test(str_to_exp 
+        "let x = 10 in let f = fun y -> fun z -> z * (x + y) in f 11 2;;)"))
+        with Evaluation.EvalError "variable unbound" -> 
+            print_string "variable unbound\n"; Evaluation.Env.Val (Raise)
+    in
+
+    (* 42 *)
+     let test2 = str_to_exp 
+        "42;;"
+        |> eval_d_help_test |> extract_val
+    in
+    unit_test (test2=str_to_exp"42;;")
+        "eval_d basic1";
+
+    (* 21*2 *)
+     let test3 = str_to_exp 
+        "21*2;;"
+        |> eval_d_help_test |> extract_val
+    in
+    unit_test (test3=str_to_exp"42;;")
+        "eval_d basic2";
+    
+    (* fun x -> x * 2 *)
+     let test4 = str_to_exp 
+        "fun x -> x * 2;;"
+        |> eval_d_help_test 
+    in
+    print_string(Env.value_to_string test4 ^"\n");
+     print_string(Env.value_to_string test4 ^"\n");
+    (* unit_test (test4=str_to_exp"fun x -> x * 2;;")
+        "eval_d basic3"; *)
+    
+    (* let x = 3 in fun x -> x*2 *)
+    (* should return [function x -> -[x*2]] where [{x ->3}] *)
+    let test5 = str_to_exp 
+        "let x = 3 in fun x -> x*2 ;;"
+        |> eval_d_help_test
+    in 
+    print_string(Env.value_to_string test5 ^"\n");
+    print_string(Env.value_to_string test5 ^"\n");
+
+    (* let f = fun x -> x*2 in f 21 *)
+    (* should return 42 *)
+    let test6 = str_to_exp 
+        "let f = fun x -> x*2 in f 21;;"
+        |> eval_d_help_test |> extract_val
+    in 
+    print_string(exp_to_concrete_string test6 ^"\n");
+    print_string(exp_to_abstract_string test6 ^"\n");
+    
+    (* let intofbool = fun b -> if b then 1 else 0 in intofbool true;; *)
+    (* should return 1 *)
+    let test7 = str_to_exp 
+        "let intofbool = fun b -> if b then 1 else 0 in intofbool true;;"
+        |> eval_d_help_test |> extract_val
+    in 
+    print_string(exp_to_concrete_string test7 ^"\n");
+    print_string(exp_to_abstract_string test7 ^"\n");
+
+    (* let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10 *)
+    (* should return 3628800*)
+    let test8 = str_to_exp 
+        "let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10;;"
+        |> eval_d_help_test |> extract_val
+    in 
+    print_string(exp_to_concrete_string test8 ^"\n");
+    print_string(exp_to_abstract_string test8 ^"\n");
+
+    (*   let x = 2 in let f =  fun y -> x * y in let x = 1 in f 21;;*)
+    (* should return 21 in dyn, but 42 in sub and lex *)
+    let test9 = str_to_exp 
+        "  let x = 2 in let f =  fun y -> x * y in let x = 1 in f 21;;"
+        |> eval_d_help_test |> extract_val
+    in 
+    print_string(exp_to_concrete_string test9 ^"\n");
+    print_string(exp_to_abstract_string test9 ^"\n");
+
+    (* repaired unbound error *)
+    (* let x = 10 in let f = fun y -> fun z -> z * (x + y) in let y = 12 in f 11 2;; *)
+    (* should return 44 *)
+    let test10 = str_to_exp 
+        "let x = 10 in let f = fun y -> fun z -> z * (x + y) in let y = 12 in f 11 2;;"
+        |> eval_d_help_test |> extract_val
+    in 
+    print_string(exp_to_concrete_string test10 ^"\n");
+    print_string(exp_to_abstract_string test10 ^"\n");
+
+
+      (* let intofbool = fun b -> if b then 1 else 0 in intofbool true;; *)
+    (* should return 1 *)
+    let test7 = str_to_exp 
+        "let intofbool = fun b -> if b then 1 else 0 in intofbool true;;;;"
+        |> eval_d_help_test |> extract_val
+    in 
+    print_string(exp_to_concrete_string test7 ^"\n");
+    print_string(exp_to_abstract_string test7 ^"\n");
+
+    ;;
 
 (* 
     let intofbool = fun b -> if b then 1 else 0 in intofbool true;;
@@ -287,6 +401,8 @@ let x = 10 in let f = fun y -> fun z -> z * (x + y) in let y = 12 in f 11 2;;
     *)
 let test_all () = 
     subst_test ();
-    eval_s_test () ;;
+    eval_s_test ();
+    (* eval_l_test(); make sure to test the 7:24 case that should eval to 42 *)
+    eval_d_test ();;
 
 let _ = test_all () ;;

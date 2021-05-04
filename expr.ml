@@ -135,10 +135,10 @@ let rec subst (var_name : varid) (repl : expr) (exp : expr) : expr =
     *)
 
   | Letrec (v, d, b) -> 
-      if v = var_name then Letrec (v, subst var_name repl d, b)
+      if v = var_name then Letrec (v, d, b)
       else if SS.mem v (free_vars repl)
         then let z = new_varname () in 
-        Letrec (z, subst z repl d, subst z repl (subst v (Var z) b))
+        Letrec (z, subst z repl (subst v (Var z) d), subst z repl (subst v (Var z) b))
       else Letrec (v, subst var_name repl d, subst var_name repl b)
   | Raise -> Raise
   | Unassigned -> Unassigned
@@ -177,7 +177,7 @@ let rec exp_to_concrete_string (exp : expr) : string =
   | Conditional (i, t, e) -> "if " ^ (exp_to_concrete_string i) ^ " then " ^ 
                              (exp_to_concrete_string t) ^ " else " ^ 
                              (exp_to_concrete_string e)
-  | Fun (v, e) -> "fun " ^ v ^ " -> " ^ (exp_to_concrete_string e)
+  | Fun (v, e) -> "["^ "function " ^ v ^ " -> " ^ "[" ^ (exp_to_concrete_string e) ^"]]"
   | Let (v, e1, e2) -> "let " ^ v ^ " = " ^ (exp_to_concrete_string e1) ^ 
                        " in " ^ (exp_to_concrete_string e2)
   | Letrec (v, e1, e2) -> "let rec " ^ v ^ " = " ^ (exp_to_concrete_string e1) 

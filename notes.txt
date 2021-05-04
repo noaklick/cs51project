@@ -2,9 +2,13 @@ QUESTIONS:
 2) !! letrec for eval_s / subst!? is it in free_vars? in subst? can't figure it out? 
 
 Before OH:
-have a full draft of lexical
-identify where the issue is in eval_s/subst letrec
+test lexical
 design: eval_d, subst, string
+
+done before oh:
+x identify where the issue is in eval_s/subst letrec 
+x have a full draft of lexical
+x test dynamic
 
 
 Answered:
@@ -23,8 +27,9 @@ XX 5) do we just have an exception be a Raise if you try to add non-nums?
 XX 9) instructions for env module
 
 left to do:
-  NEED HELP: eval_s letrec
+  NEED HELP: eval_s letrec / eval_s letrec
   extension (eval_l)
+  float
   writeup
   subst design (have a helper that substs with varname and repl)
   clean up design by far on the string ones
@@ -35,16 +40,60 @@ left to do:
 
 
 done but need testing:
-  eval_d
-  eval_s
+  eval_d letrec
   subst
   free_vars ((lab 9 exercise 11!!))
   env module
 
+done and tested :)
+  eval_d
+  eval_s
+
  issues:
-  eval_s letrec 
+  closure printing on eval_d
+  eval_s letrec/eval_d letrec 
   subst z rules
   negation being weird eval s basic 1 test
+
+eval_l:
+To fix the dynamic semantics,
+we need to handle function values differently. When a function value
+is computed (say the value of f, fun y -> x + y), we need to keep
+track of the lexical environment in which the function occurred so
+that when the function is eventually applied to an argument, we
+can evaluate the application in that lexical environment – 
+the environment when the function was defined – rather than the dynamic
+environment – the environment when the function was called.
+The technique to enable this is to package up the function being
+defined with a snapshot of the environment at the time of its definition 
+into a closure. There is already provision for closures in the env
+module. You’ll notice that the value type has two constructors, one
+for normal values (like numbers, booleans, and the like) and one for
+closures. The Closure constructor just packages together a function
+with its lexical environment.
+Stage 8 (if you decide to do a lexically scoped evaluator in service
+of your extension) Make a copy of your eval_d evaluation function
+and call it eval_l (the ‘l’ for lexically scoped environment semantics). 
+Modify the code so that the evaluation of a function returns a
+closure containing the function itself and the current environment.
+Modify the function application part so that it evaluates the body of
+the function in the lexical environment from the corresponding closure
+(appropriately updated). As usual, test it thoroughly. If you’ve carefully
+accumulated good unit tests for the previous evaluators, you should be
+able to fully test this new one with just a single function call.
+Do not just modify eval_d to exhibit lexical scope, as this will cause
+our unit tests for eval_d (which assume that it is dynamically scoped)
+to fail. That’s why we ask you to define the lexically scoped evaluator
+as eval_l. The copy-paste recommendation for building eval_l from
+eval_d makes for simplicity in the process, but will undoubtedly leave
+you with redundant code. Once you’ve got this all working, you may
+want to think about merging the two implementations so that they
+share as much code as possible. Various of the abstraction techniques
+you’ve learned in the course could be useful here. 
+
+
+
+
 
 exp match 
  match exp with
