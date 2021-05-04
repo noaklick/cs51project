@@ -7,8 +7,6 @@ design: eval_d, subst, string
 left to do:
   float
   writeup
-  subst design (have a helper that substs with varname and repl)
-  clean up design by far on the string ones
   go through and check that i'm following EACH RULE and didn't accidentally get a few mixed up
   do some more eval_l tests to be totally sure
 

@@ -184,7 +184,6 @@ let extract_val (v : Env.value) : expr =
   | Closure (x, y) -> x ;;
    
 let rec eval_d (exp : expr) (env : Env.env) : Env.value =
-  (* failwith "eval_d not implemented" ;; *)
   let binop_eval_d  (op : binop) (v1 : expr) (v2 : expr) : expr = 
     match op, v1, v2 with
     | Plus, Num x1, Num x2 -> Num (x1 + x2)
@@ -274,7 +273,6 @@ let rec eval_l (exp : expr) (env : Env.env) : Env.value =
     | Num _ | Bool _ | Unop _ | Binop _ | Conditional _ 
     | Raise | Unassigned -> eval_d exp env ;;
   
-  (* failwith "eval_l not implemented" ;; *)
 
 (* The EXTENDED evaluator -- if you want, you can provide your
    extension as a separate evaluator, or if it is type- and
