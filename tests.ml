@@ -166,16 +166,6 @@ let eval_s_test () =
         "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;"
         |> eval_s_help_test |> extract_val
     in
-    (* print_string (exp_to_abstract_string (str_to_exp 
-        "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;"));
-    print_newline ();
-    print_string (exp_to_concrete_string ((str_to_exp 
-        "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;"))); 
-    print_newline (); *)
-    print_string (exp_to_abstract_string test13) ;
-    print_newline ();
-    print_string (exp_to_concrete_string test13) ;
-    print_newline ();
     unit_test (test13=str_to_exp"3628800;;")
         "eval_s basic13 LET REC!!!";
     
@@ -260,8 +250,6 @@ let eval_d_test ()=
         "let intofbool = fun b -> if b then 1 else 0 in intofbool true;;"
         |> eval_d_help_test |> extract_val
     in 
-    print_string(exp_to_concrete_string test7 ^"\n");
-    print_string(exp_to_abstract_string test7 ^"\n");
     unit_test (test7 = str_to_exp "1;;")
         "eval_d intofbool7";
 
@@ -271,8 +259,6 @@ let eval_d_test ()=
         "let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10;;"
         |> eval_d_help_test |> extract_val
     in 
-    print_string(exp_to_concrete_string test8 ^"\n");
-    print_string(exp_to_abstract_string test8 ^"\n");
     unit_test (test8 = str_to_exp "3628800;;")
         "eval_d factorial";
 
@@ -399,16 +385,6 @@ let eval_l_test () =
         "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;"
         |> eval_l_help_test |> extract_val
     in
-    (* print_string (exp_to_abstract_string (str_to_exp 
-        "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;"));
-    print_newline ();
-    print_string (exp_to_concrete_string ((str_to_exp 
-        "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;"))); 
-    print_newline (); *)
-    print_string (exp_to_abstract_string test13) ;
-    print_newline ();
-    print_string (exp_to_concrete_string test13) ;
-    print_newline ();
     unit_test (test13=str_to_exp"3628800;;")
         "eval_l basic13 LET REC!!!";
     

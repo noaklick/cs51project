@@ -137,23 +137,20 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
     | LessThan, Num x1, Num x2 -> Bool (x1 < x2)
     | LessThan, Bool x1, Bool x2 -> Bool (x1 = x2)
     | _, _, _ -> 
-        print_string "line 140 is the issue";
-        Raise
+        raise (EvalError "binop not an op")
   in
 
   let unop_eval_s (op : unop) (v : expr) : expr = 
     match op, v with
     | Negate, Num x -> Num (~-x)
     | _, _ -> 
-      print_string "line 148 is the issue";
-      Raise
+      raise (EvalError "unop not an op")
   in
 
   let rec eval_s_help (v : expr) : expr =
     match v with
     | Var x -> 
-        print_string "line 155 is the issue";
-        Raise
+        raise (EvalError "tried to evaluate a variable")
     | Num x -> Num x
     | Bool x -> Bool x
     | Unop (x, y) ->
@@ -173,34 +170,21 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
     raise errors Unassigned *)
     | Letrec (x, d, b) -> 
         let vd =  
-            (* print_string "we get to 177\n"; *)
             eval_s_help d in
-             (* print_string "we get to 179\n"; *)
         let close = 
-            (* print_string "we get to 181\n"; *)
             subst x (Letrec (x, vd, Var (x))) vd in
-             (* print_string "we get to 183\n"; *)
         let bclose = 
-              (* print_string "we get to 185\n"; *)
               subst x (eval_s_help close) b in
-               (* print_string "we get to 187\n"; *)
-               (* print_string (exp_to_abstract_string bclose ^"\n"); *)
-               print_string (exp_to_concrete_string bclose ^"\n");
-        (* bclose *)
         eval_s_help bclose
 
-    | Raise -> 
-          print_string "line 192 is the issue\n";
-          Raise
+    | Raise -> Raise
     | Unassigned -> raise (EvalError "tried to evaluate unassigned")
     | App (p, q) -> 
        (match eval_s_help p with
         | Fun (x, b) -> 
             let vq = eval_s_help q in
             eval_s_help (subst x vq b)
-        | _ -> 
-            print_string "line 203 is the culprit grr\n";
-            Raise)
+        | _ -> raise (EvalError "tried to apply a non function"))
   in
   Env.Val (eval_s_help exp) ;;
   (* failwith "eval_s not implemented" ;; *)
@@ -224,9 +208,7 @@ let rec eval_d (exp : expr) (env : Env.env) : Env.value =
     | Equals, Bool x1, Bool x2 -> Bool (x1 = x2)
     | LessThan, Num x1, Num x2 -> Bool (x1 < x2)
     | LessThan, Bool x1, Bool x2 -> Bool (x1 = x2)
-    | _, _, _ -> 
-      print_string "aha line 229 is the problem\n";
-      Raise
+    | _, _, _ -> raise (EvalError "binop not an op")
   in
 
   let unop_eval_d (op : unop) (v : expr) : expr = 
@@ -249,11 +231,7 @@ let rec eval_d (exp : expr) (env : Env.env) : Env.value =
     | Conditional (i, t, e) -> 
         (match extract_val (eval_d i env) with
         | Bool x -> if x then (eval_d t env) else (eval_d e env)
-        | _ -> 
-           print_string ((exp_to_concrete_string i) ^ "\n");
-           print_string ((exp_to_abstract_string i)^ "\n");
-           print_string "aha line 256 is the problem\n";
-          Env.Val (Raise))
+        | _ -> raise (EvalError "bool not a conditional"))
     | Fun (v, e) -> Env.Val (Fun (v, e))
     | Let (x, d, b) -> 
         let vd = eval_d d env in
