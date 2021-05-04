@@ -161,11 +161,10 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
     | Binop (b, x, y) -> 
       eval_s_help (binop_eval_s b (eval_s_help x) (eval_s_help y))
     | Conditional (i, t, e) -> 
-        (match i with
+        (match eval_s_help i with
         | Bool x -> if x then eval_s_help t else eval_s_help e
         | _ -> 
-           print_string "line 167 is the issue\n";
-           Raise)
+           raise (EvalError "conditional isn't a bool"))
     | Fun (v, e) -> Fun (v, e)
     | Let (v, e1, e2) -> eval_s_help (subst v (eval_s_help e1) e2)
 
@@ -183,7 +182,7 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
              (* print_string "we get to 183\n"; *)
         let bclose = 
               (* print_string "we get to 185\n"; *)
-              subst x close b in
+              subst x (eval_s_help close) b in
                (* print_string "we get to 187\n"; *)
                (* print_string (exp_to_abstract_string bclose ^"\n"); *)
                print_string (exp_to_concrete_string bclose ^"\n");
@@ -248,7 +247,7 @@ let rec eval_d (exp : expr) (env : Env.env) : Env.value =
     | Binop (b, x, y) -> 
       Env.Val (binop_eval_d b (extract_val (eval_d x env))(extract_val (eval_d y env)))
     | Conditional (i, t, e) -> 
-        (match i with
+        (match extract_val (eval_d i env) with
         | Bool x -> if x then (eval_d t env) else (eval_d e env)
         | _ -> 
            print_string ((exp_to_concrete_string i) ^ "\n");
@@ -312,9 +311,9 @@ let rec eval_l (exp : expr) (env : Env.env) : Env.value =
         Env.Val (binop_eval_l b 
           (extract_val (eval_l x env)) (extract_val (eval_l y env)))
     | Conditional (i, t, e) -> 
-        (match i with
+        (match extract_val (eval_l i env) with
         | Bool x -> if x then (eval_l t env) else (eval_l e env)
-        | _ -> Env.Val (Raise))
+        | _ -> raise (EvalError "conditonal isn't a bool"))
     | Fun (x, p) -> Closure (Fun (x,p), env)
     | Let (x, d, b) -> 
         let vd = eval_l d env in
