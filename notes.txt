@@ -2,6 +2,7 @@ QUESTIONS:
 1) !!! typing for eval_d how to think through
 2) !! letrec for eval_s
 3) ! the z rule for subst!! specifically function app and my failing test
+4) eval_s basic 1: negationa acting weird
 1) is there an example i can test the z rules in subst with?
 
 
@@ -35,8 +36,9 @@ subst
 free_vars ((lab 9 exercise 11!!))
 env module
 
-eval_s issues:
-  letrec
+ issues:
+  eval_s letrec 
+  subst z rule in fn app
 
 exp match 
  match exp with

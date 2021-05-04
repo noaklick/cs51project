@@ -161,7 +161,8 @@ let rec exp_to_concrete_string (exp : expr) : string =
   | Var x -> x
   | Num x -> string_of_int x
   | Bool x -> string_of_bool x
-  | Unop (Negate, y) -> "~" ^ "(" ^ (exp_to_concrete_string y) ^ ")"
+  | Unop (Negate, y) -> "-" ^ (exp_to_concrete_string y) 
+  (* "~" ^ "(" ^ (exp_to_concrete_string y) ^ ")" *)
   | Binop (b, x, y) -> 
       (match b with
       | Plus -> concrete_binop x y " + "
