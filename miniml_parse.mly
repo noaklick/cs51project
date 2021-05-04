@@ -19,7 +19,7 @@
 %token RAISE
 %token <string> ID
 %token <int> INT 
-%token <float> FLOAT
+%token <float> FLOAT 
 %token TRUE FALSE
 
 %nonassoc IF

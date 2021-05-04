@@ -19,7 +19,7 @@ type binop =
   | Equals
   | LessThan
   | GreaterThan                          (* added for extension *)
-;;
+;; 
 
 type varid = string ;;
   
@@ -75,7 +75,8 @@ let rec free_vars (exp : expr) : varidset =
      (free_vars e)
   | Fun (v, e) -> SS.remove v (free_vars e)
   | Let (v, e1, e2) -> SS.union (SS.remove v (free_vars e2)) (free_vars e1)
-  | Letrec (x, p, q) -> SS.remove x (SS.union (SS.remove x (free_vars q)) (free_vars p))
+  | Letrec (x, p, q) -> 
+      SS.remove x (SS.union (SS.remove x (free_vars q)) (free_vars p))
   | Raise -> SS.empty
   | Unassigned -> SS.empty
   | App (e1, e2) -> SS.union (free_vars e1) (free_vars e2)

@@ -29,19 +29,19 @@ let repl () =
 
   (* the main LOOP *)
   while true do
-    (try
+    (try 
         (* prompt *)
         printf "<== %!";
         
         (* READ and parse an expression from the input *)
         let exp = MP.input ML.token lexbuf in 
          printf "--> %s\n" (Ex.exp_to_abstract_string exp);
+
         (* EVALuate it *)
         let res = Ev.evaluate exp env in
         let res_s = Ev.evaluate_s exp env in 
         let res_d = Ev.evaluate_d exp env in 
         let res_l = Ev.evaluate_l exp env in
-
          
         (* PRINT the result; in this initial version, the trivial
            evaluator just returns the expression unchanged as an

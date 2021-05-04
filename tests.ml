@@ -415,6 +415,49 @@ let eval_l_test () =
     in
     unit_test (test16=str_to_exp"42;;")
         "eval_l dyn error16";
+    
+     (* let x = 10 in let f = fun y -> fun z -> z * (x + y) in f 11 2*)
+    let test16 = str_to_exp 
+        "let x = 10 in let f = fun y -> fun z -> z * (x + y) in f 11 2;;"
+        |> eval_l_help_test |> extract_val
+    in
+    unit_test (test16=str_to_exp"42;;")
+        "eval_l dyn error16";
+ 
+     (* let x = 1 in let f = fun y -> x + y in let x = 2 in f 3 *)
+    let test17 = str_to_exp 
+        "let x = 1 in let f = fun y -> x + y in let x = 2 in f 3;;"
+        |> eval_l_help_test |> extract_val
+    in
+    unit_test (test17=str_to_exp"4;;")
+        "eval_l basic17";
+
+     (* let f = fun y -> y + y in f 10 *)
+    let test18 = str_to_exp 
+        "let f = fun y -> y + y in f 10;;"
+        |> eval_l_help_test |> extract_val
+    in
+    unit_test (test18=str_to_exp"20;;")
+        "eval_l basic18";
+
+
+    (* let x = 2 in let f = fun y -> x + y in f 8 *)
+    let test19 = str_to_exp 
+        " let x = 2 in let f = fun y -> x + y in f 8;;"
+        |> eval_l_help_test |> extract_val
+    in
+    unit_test (test19=str_to_exp"10;;")
+        "eval_l basic19";
+
+    (* let x = 2 in let f = fun y -> x + y in let x = 8 in f x *)
+    let test20 = str_to_exp 
+        "let x = 2 in let f = fun y -> x + y in let x = 8 in f x;;"
+        |> eval_l_help_test |> extract_val
+    in
+    unit_test (test20=str_to_exp"10;;")
+        "eval_l basic20";
+
+    
 ;;
 
 

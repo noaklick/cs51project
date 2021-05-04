@@ -173,7 +173,7 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
   (* to preserve expr -> expr *)
   let rec eval_s_help (v : expr) : expr =
     match v with
-    | Var x -> raise (EvalError "tried to evaluate a variable")
+    | Var _ -> raise (EvalError "tried to evaluate a variable")
     | Num x -> Num x
     | Float x -> Float x
     | Bool x -> Bool x
@@ -185,7 +185,7 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
         | Bool x -> if x then eval_s_help t else eval_s_help e
         | _ -> raise (EvalError "conditional isn't a bool"))
     | Fun (v, e) -> Fun (v, e)
-    | Let (v, e1, e2) -> eval_s_help (subst v (eval_s_help e1) e2)
+    | Let (x, d, b) -> eval_s_help (subst x (eval_s_help d) b)
     | Letrec (x, d, b) -> 
         let vd = eval_s_help d in
         let close = subst x (Letrec (x, vd, Var (x))) vd in
@@ -206,7 +206,7 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
 let extract_val (v : Env.value) : expr =
   match v with
   | Val x -> x
-  | Closure (x, y) -> x ;;
+  | Closure (x, _) -> x ;;
      
 (* The DYNAMICALLY-SCOPED ENVIRONMENT MODEL evaluator -- to be
    completed *)
@@ -220,41 +220,40 @@ let rec eval_d (exp : expr) (env : Env.env) : Env.value =
   in
 
   (* to preserve expr -> expr *)
-  let rec eval_d_help (v : expr) (en : Env.env) : expr =
+  let eval_d_help (v : expr) (en : Env.env) : expr =
     match v with
-    | Var x -> raise (EvalError"something went wrong")
     | Num x -> Num x
     | Float x -> Float x
     | Bool x -> Bool x
-    | Unop (x, y) -> unop_eval_d x (extract_val (eval_d y env))
+    | Unop (x, y) -> unop_eval_d x (extract_val (eval_d y en))
     | Binop (b, x, y) ->
-        (binop_eval b (extract_val (eval_d x env)) (extract_val (eval_d y env)))
+        (binop_eval b (extract_val (eval_d x en)) (extract_val (eval_d y en)))
     | Conditional (i, t, e) -> 
-        (match extract_val (eval_d i env) with
-        | Bool x -> if x then extract_val (eval_d t env) 
-                    else extract_val (eval_d e env)
+        (match extract_val (eval_d i en) with
+        | Bool x -> if x then extract_val (eval_d t en) 
+                    else extract_val (eval_d e en)
         | _ -> raise (EvalError "bool not a conditional"))
     | Fun (v, e) -> Fun (v, e)
     | Let (x, d, b) -> 
-        let vd = eval_d d env in
-        let vb = extract_val (eval_d b (Env.extend env x (ref vd))) in
+        let vd = eval_d d en in
+        let vb = extract_val (eval_d b (Env.extend en x (ref vd))) in
         vb
+      (* for dynamic semantics letrec works from the let rule *)
     | Letrec (x, d, b) ->
-        let x_ref = ref (Env.Val Unassigned) in
-        let env_ext = Env.extend env x x_ref in 
-        let vd = eval_d d env_ext in
-        x_ref := vd;
-        extract_val (eval_d b env_ext)
+        let vd = eval_d d en in
+        let vb = extract_val (eval_d b (Env.extend en x (ref vd))) in
+        vb
     | Raise -> Raise
     | Unassigned -> raise (EvalError "tried to evaluate unassigned")
     | App (p, q) -> 
-        (match extract_val (eval_d p env) with 
+        (match extract_val (eval_d p en) with 
         | Fun (x, b) ->
-          let vq = eval_d q env in 
-          let env_ext = Env.extend env x (ref vq) in
+          let vq = eval_d q en in 
+          let env_ext = Env.extend en x (ref vq) in
           let vb = extract_val (eval_d b env_ext) in
           vb
         | _ -> raise (EvalError "app did not have a function"))
+    | Var _ -> raise (EvalError"something went wrong")
   in
 
   match exp with 
@@ -275,18 +274,18 @@ let rec eval_l (exp : expr) (env : Env.env) : Env.value =
   in
 
   (* handle all exp -> exp cases *)
-  let eval_l_help (v : expr) (en : Env.env ) : expr =
+  let eval_l_help (v : expr) (en : Env.env) : expr =
     match v with
     | Num x -> Num x
     | Float x -> Float x
     | Bool x -> Bool x
-    | Unop (x, y) -> unop_eval_l x (extract_val (eval_l y env))
+    | Unop (x, y) -> unop_eval_l x (extract_val (eval_l y en))
     | Binop (b, x, y) -> 
-      (binop_eval b (extract_val (eval_l x env)) (extract_val (eval_l y env)))
+      (binop_eval b (extract_val (eval_l x en)) (extract_val (eval_l y en)))
     | Conditional (i, t, e) ->
-         (match extract_val (eval_l i env) with
-        | Bool x -> if x then extract_val (eval_l t env) 
-                    else extract_val (eval_l e env)
+         (match extract_val (eval_l i en) with
+        | Bool x -> if x then extract_val (eval_l t en) 
+                    else extract_val (eval_l e en)
         | _ -> raise (EvalError "bool not a conditional"))
     | Raise  -> Raise
     | Unassigned -> raise (EvalError "tried to evaluate unassigned")
@@ -318,7 +317,7 @@ let rec eval_l (exp : expr) (env : Env.env) : Env.value =
     eval_l b env_ext
   | _ -> Env.Val (eval_l_help exp env)
     ;;
-  
+   
 
 (* The EXTENDED evaluator -- if you want, you can provide your
    extension as a separate evaluator, or if it is type- and

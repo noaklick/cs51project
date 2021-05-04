@@ -1,15 +1,15 @@
 QUESTIONS:
-
+how can/should i merge eval_d and eval_s?
+how do i get the repl to handle exceptions?
 
 Before OH:
-design: eval_d, subst, string
 
+ 
 left to do:
+  combine eval_d and eval_s
   writeup : lex, float, greater than
-  go through and check that i'm following EACH RULE and didn't accidentally get a few mixed up
-  do some more eval_l tests to be totally sure
   test the fresh_var rules using pen and paper (eye roll)
-
+  
 done but need testing:
   free_vars ((lab 9 exercise 11!!))
   env module

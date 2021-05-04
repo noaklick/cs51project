@@ -26,7 +26,7 @@
                        ("false", FALSE);
                        ("fun", FUNCTION);
                        ("function", FUNCTION)
-                     ]
+                     ] 
                      
   let sym_table = 
     create_hashtable 8 [
