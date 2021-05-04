@@ -1,6 +1,4 @@
 QUESTIONS:
-3) ! how do i print the environment of just a value as per 2:42 in the video? 
-4) my tests that fail but seem fine: negation and the fresh_var
 5) is it reasonable how i do eval_l?
 
 Before OH:
@@ -12,7 +10,7 @@ left to do:
   subst design (have a helper that substs with varname and repl)
   clean up design by far on the string ones
   go through and check that i'm following EACH RULE and didn't accidentally get a few mixed up
-    do some more eval_l tests to be totally sure
+  do some more eval_l tests to be totally sure
 
 done but need testing:
   subst
@@ -25,9 +23,7 @@ done and tested :)
   eval_l
 
  issues:
-  closure printing on eval_d
-  subst z rules
-  negation being weird eval s basic 1 test
+  
 
 done before oh:
 x identify where the issue is in eval_s/subst letrec 
@@ -54,6 +50,8 @@ XX 1) !! conditionals in eval_d not working (see intofbool)
 XX 2) !! letrec for all eval  / subst!? 
   is it in conditonals? free_vars? in subst? can't figure it out? 
     example to show: let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10;;
+XX 3) ! how do i print the environment of just a value as per 2:42 in the video? 
+XX 4) my tests that fail but seem fine: negation and the fresh_var
 
 
 what do eval_l and eval_d share?

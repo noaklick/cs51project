@@ -54,9 +54,9 @@ let subst_test () =
     print_newline ();
     print_string"                                            let x0 = 5 in f (x + 1)";
     print_newline ();
-    print_string ("                                            " ^ (exp_to_concrete_string test8st));
+    print_string ("                                            " ^ (exp_to_abstract_string test8st));
     print_newline ();
-    unit_test (exp_to_concrete_string (subst "y" (str_to_exp "x+y;;") test8) = "let x0 = 5 in f (x + 1)")
+    unit_test ( (subst "y" (str_to_exp "x+y;;") test8) = str_to_exp "let x0 = 5 in f (x + 1);;")
             "subst basic8 dont freak out if fails";
 ;;
 

@@ -74,15 +74,14 @@ let rec free_vars (exp : expr) : varidset =
   | Let (v, e1, e2) -> SS.union (SS.remove v (free_vars e2)) (free_vars e1)
   | Letrec (x, p, q) -> SS.remove x (SS.union (SS.remove x (free_vars q)) (free_vars p))
   | Raise -> SS.empty
-  | Unassigned ->SS.empty
+  | Unassigned -> SS.empty
   | App (e1, e2) -> SS.union (free_vars e1) (free_vars e2)
   
 (* new_varname () -- Returns a freshly minted `varid` constructed with
    a running counter a la `gensym`. Assumes no variable names use the
    prefix "var". (Otherwise, they might accidentally be the same as a
    generated variable name.) *)
-let new_varname : unit ->  varid =
-  
+let new_varname : unit -> varid =
   let suffix = ref ~-1 in
   fun () ->
     suffix := !suffix + 1;
@@ -97,54 +96,45 @@ let new_varname : unit ->  varid =
  *)
 
 
-  ;;
-
 (* subst var_name repl exp -- Return the expression `exp` with `repl`
    substituted for free occurrences of `var_name`, avoiding variable
    capture *)
 let rec subst (var_name : varid) (repl : expr) (exp : expr) : expr =
-   match exp with
+
+  let subst_help (x : expr) = 
+    subst var_name repl x 
+  in
+
+  match exp with
   | Var x -> if x = var_name then repl else Var x 
-      (* ACCOUNT FOR FREE VAR *)
   | Num x -> Num x
   | Bool x -> Bool x
-  | Unop (x, y) -> Unop (x, subst var_name repl y)
-  | Binop (b, x, y) -> Binop (b, subst var_name repl x, subst var_name repl y)
+  | Unop (x, y) -> Unop (x, subst_help y)
+  | Binop (b, x, y) -> Binop (b, subst_help x, subst_help y)
   | Conditional (i, t, e) -> 
-      Conditional (subst var_name repl i, subst var_name repl t, 
-                  subst var_name repl e)
+      Conditional (subst_help i, subst_help t, subst_help e)
   | Fun (v, e) ->
-    if v = var_name then Fun (v, e)
-    else if not (SS.mem v (free_vars repl)) 
-      then Fun (v, subst var_name repl e)
-    else let new_var = new_varname () in
-      Fun (new_var, subst v (Var new_var) (subst var_name repl e))
-     (* HOW TO DO BOTH SUBSTITUTIONS AT ONCE? *)
-  | Let (v, e1, e2) -> 
-      if v = var_name then Let (v, subst var_name repl e1, e2)
+      if v = var_name then Fun (v, e)
       else if not (SS.mem v (free_vars repl)) 
-        then Let (v, subst var_name repl e1, subst var_name repl e2)
+        then Fun (v, subst_help e)
       else let new_var = new_varname () in
-      Let (new_var, subst var_name repl e1, subst var_name repl 
-        (subst v (Var new_var) e2))
-      (* Let (new_var, subst v repl e1, 
-          subst v (Var new_var) (subst var_name repl e2)) *)
-   (* Let (y, Q, R) varname = x repl = P e2 = R
-      Let(z, subst x p Q, subst y z (subst x p R)
-      Let (new_var, subst varname repl e1, subst v new_var (subst varname repl e2)))
-    *)
-
+        Fun (new_var, subst v (Var new_var) (subst_help e))
+  | Let (v, e1, e2) -> 
+      if v = var_name then Let (v, subst_help e1, e2)
+      else if not (SS.mem v (free_vars repl)) 
+        then Let (v, subst_help e1, subst_help e2)
+      else let new_var = new_varname () in
+      Let (new_var, subst_help e1, subst_help (subst v (Var new_var) e2))
   | Letrec (v, d, b) -> 
       if v = var_name then Letrec (v, d, b)
       else if SS.mem v (free_vars repl)
         then let z = new_varname () in 
-        Letrec (z, subst z repl (subst v (Var z) d), subst z repl (subst v (Var z) b))
-      else Letrec (v, subst var_name repl d, subst var_name repl b)
+        Letrec (z, subst z repl (subst v (Var z) d), 
+               subst z repl (subst v (Var z) b))
+      else Letrec (v, subst_help d, subst_help b)
   | Raise -> Raise
   | Unassigned -> Unassigned
-  | App (e1, e2) -> App (subst var_name repl e1, subst var_name repl e2)
-  (* failwith "subst not implemented" ;; *)
-  
+  | App (e1, e2) -> App (subst_help e1, subst_help e2)
   ;;
      
 (*......................................................................
