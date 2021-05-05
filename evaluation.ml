@@ -167,15 +167,16 @@ let binop_eval  (op : binop) (v1 : expr) (v2 : expr) : expr =
     | GreaterThan, Float x1, Float x2 -> Bool (x1 > x2)
     | _, _ , _ -> raise (EvalError "tried to compare incompatible types")
 
-let eval_s (exp : expr) (_env : Env.env) : Env.value =
 
-  (* evaluate s unops *)
-  let unop_eval_s (op : unop) (v : expr) : expr = 
+  (* evaluate all unops *)
+  let unop_eval (op : unop) (v : expr) : expr = 
     match op, v with
     | Negate, Num x -> Num (~-x)
     | Negate, Float x -> Float (~-.x)
     | _, _ -> raise (EvalError "unop not an op")
-  in
+
+
+let eval_s (exp : expr) (_env : Env.env) : Env.value =
 
   (* to preserve expr -> expr *)
   let rec eval_s_help (v : expr) : expr =
@@ -184,7 +185,7 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
     | Num x -> Num x
     | Float x -> Float x
     | Bool x -> Bool x
-    | Unop (x, y) -> eval_s_help (unop_eval_s x (eval_s_help y))
+    | Unop (x, y) -> eval_s_help (unop_eval x (eval_s_help y))
     | Binop (b, x, y) -> 
         eval_s_help (binop_eval b (eval_s_help x) (eval_s_help y))
     | Conditional (i, t, e) -> 
@@ -241,12 +242,6 @@ module type EVALTYPE =
 (* functor to create an eval function given a model of lexical or dynamic *)
 module EvalLexDyn (Model : MODEL) : EVALTYPE  = 
   struct
-
-    let unop_eval (op : unop) (v : expr) : expr = 
-    match op, v with
-    | Negate, Num x -> Num (~-x)
-    | Negate, Float x ->Float (~-.x)
-    | _, _ -> raise (EvalError "unop not an op")
 
     (* function to choose a new app env based on model type *)
     let rec app_env (env_l : Env.env) (env_d : Env.env) : Env.env =
