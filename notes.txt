@@ -6,9 +6,8 @@ Before OH:
 
  
 left to do:
-  combine eval_d and eval_s
   writeup : lex, float, greater than
-  test the fresh_var rules using pen and paper (eye roll)
+ 
   
 done but need testing:
   free_vars ((lab 9 exercise 11!!))
@@ -20,6 +19,8 @@ done and tested :)
   eval_s
   eval_l
   subst
+  combine eval_d and eval_s
+
 
  issues:
   

@@ -29,7 +29,8 @@ let subst_test () =
 
     (*  ((fun x -> x * x) (x - 2)) [x ↦ 8] *)
     let test4 = str_to_exp " ((fun x -> x * x) (x - 2)) ;;" in
-    unit_test (subst "x" (Num(8)) test4 = str_to_exp "(fun x -> x * x) (8 - 2);;")
+    unit_test (subst "x" (Num(8)) test4 = 
+                str_to_exp "(fun x -> x * x) (8 - 2);;")
             "subst basic4";
 
     (*  3 [x ↦ 8] *)
@@ -50,13 +51,18 @@ let subst_test () =
     (* (let x = 5 in f y) [y -> x + 1] *)
     let test8 = str_to_exp "let x = 5 in f y;;" in
     let test8st = subst "y" (str_to_exp "x+1;;") test8 in
-    print_string "                                            substitution basic8";
+    print_string 
+        "                                            substitution basic8";
     print_newline ();
-    print_string"                                            let x0 = 5 in f (x + 1)";
+    print_string 
+        "                                            let x0 = 5 in f (x + 1)";
     print_newline ();
-    print_string ("                                            " ^ (exp_to_abstract_string test8st));
+    print_string 
+        ("                                            " ^ 
+            (exp_to_abstract_string test8st));
     print_newline ();
-    unit_test ( (subst "y" (str_to_exp "x+y;;") test8) = str_to_exp "let x0 = 5 in f (x + 1);;")
+    unit_test ((subst "y" (str_to_exp "x+y;;") test8) 
+                = str_to_exp "let x0 = 5 in f (x + 1);;")
             "subst basic8 dont freak out if fails";
 ;;
 
@@ -161,7 +167,7 @@ let eval_s_test () =
     unit_test (test12=str_to_exp"1;;")
         "eval_s basic12";
 
-    (* let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10  *)
+    (* let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10 *)
     let test13 = str_to_exp 
         "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;"
         |> eval_s_help_test |> extract_val
@@ -251,13 +257,13 @@ let eval_d_test ()=
     let _ = try (eval_d_help_test(str_to_exp 
         "let x = 10 in let f = fun y -> fun z -> z * (x + y) in f 11 2;;)"))
         with Evaluation.EvalError "variable unbound" -> 
-            print_string "variable unbound passed \n"; Evaluation.Env.Val (Raise)
+            print_string "variable unbound passed \n"; Evaluation.Env.Val(Raise)
     in
 
-    (* !! let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10 *)
+    (*let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10 *)
     (* should return 3628800*)
     let test8 = str_to_exp 
-        "let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10;;"
+        "let rec fact = fun n->if n = 0 then 1 else n * fact (n-1) in fact 10;;"
         |> eval_d_help_test |> extract_val
     in 
     unit_test (test8 = str_to_exp "3628800;;")
@@ -273,10 +279,11 @@ let eval_d_test ()=
         "eval_d basic9;";
 
     (* repaired unbound error *)
-    (* let x = 10 in let f = fun y -> fun z -> z * (x + y) in let y = 12 in f 11 2;; *)
+    (* let x = 10 in let f = 
+        fun y -> fun z -> z * (x + y) in let y = 12 in f 11 2;; *)
     (* should return 44 *)
     let test10 = str_to_exp 
-        "let x = 10 in let f = fun y -> fun z -> z * (x + y) in let y = 12 in f 11 2;;"
+        "let x=10 in let f=fun y->fun z ->z * (x + y) in let y = 12 in f 11 2;;"
         |> eval_d_help_test |> extract_val
     in 
     unit_test (test10 = str_to_exp "44;;")
@@ -381,7 +388,8 @@ let eval_l_test () =
     unit_test (test12=str_to_exp"1;;")
         "eval_l basic12";
 
-    (* let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10  *)
+    (* let rec fact = fun n -> 
+        if n = 0 then 1 else n * fact (n-1) in fact 10  *)
     let test13 = str_to_exp 
         "let rec fact = fun n -> if n=0 then 1 else n * fact (n-1) in fact 10;;"
         |> eval_l_help_test |> extract_val
@@ -399,10 +407,11 @@ let eval_l_test () =
         "eval_l basic14 DIFF FOR DYNAMIC";
 
     (* repaired unbound error *)
-    (* let x = 10 in let f = fun y -> fun z -> z * (x + y) in let y = 12 in f 11 2;; *)
+    (* let x = 10 in 
+        let f = fun y -> fun z -> z * (x + y) in let y = 12 in f 11 2;; *)
     (* should return 44 *)
     let test15 = str_to_exp 
-        "let x = 10 in let f = fun y -> fun z -> z * (x + y) in let y = 12 in f 11 2;;"
+        "let x=10 in let f=fun y->fun z ->z * (x + y) in let y = 12 in f 11 2;;"
         |> eval_l_help_test |> extract_val
     in 
     unit_test (test15 = str_to_exp "42;;")
