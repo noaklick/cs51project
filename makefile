@@ -1,4 +1,4 @@
-all: miniml evaluation expr tests
+all: miniml evaluation expr tests free_vars_tests
 
 miniml: miniml.ml
 	ocamlbuild -use-ocamlfind miniml.byte
@@ -11,6 +11,10 @@ expr: expr.ml
 
 tests: tests.ml
 	ocamlbuild -use-ocamlfind tests.byte
+
+free_vars_tests: free_vars_tests.ml
+	ocamlbuild -use-ocamlfind free_vars_tests.byte
+
 
 clean:
 	rm -rf _build *.byte
