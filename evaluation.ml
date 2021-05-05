@@ -249,75 +249,76 @@ struct
     | Negate, Num x -> Num (~-x)
     | _, _ -> raise (EvalError "unop not an op")
 
-    let rec eval_same (exp : expr) (env : Env.env) : expr = 
+    let rec eval_same (exp : expr) (env : Env.env) : Env.value = 
       match exp with
-      | Num x -> Num x
-      | Float x -> Float x
-      | Bool x -> Bool x
-      | Unop (x, y) -> unop_eval x (eval_same y env)
+      | Num x -> Env.Val (Num x)
+      | Float x -> Env.Val (Float x)
+      | Bool x -> Env.Val (Bool x)
+      | Unop (x, y) -> Env.Val (unop_eval x (extract_val (eval_help y env)))
       | Binop (b, x, y) ->
-          (binop_eval b (eval_same x env) (eval_same y env))
+          Env.Val (binop_eval b (extract_val (eval_help x env)) (extract_val (eval_help y env)))
       | Conditional (i, t, e) -> 
-          (match (eval_same i env) with
-          | Bool x -> if x then eval_same t env else eval_same e env
+          (match extract_val (eval_help i env) with
+          | Bool x -> if x then eval_help t env else eval_help e env
           | _ -> raise (EvalError "bool not a conditional"))
-      | Raise -> Raise
+      | Raise -> Env.Val Raise
       | Unassigned -> raise (EvalError "tried to evaluate unassigned")
-      | _ -> raise (EvalError "something went wrong")
+      | _ -> print_string "line 266\n";raise (EvalError "something went wrong")
 
 
-    and eval_diff_dyn (exp : expr) (env : Env.env) : expr =
+    and eval_diff_dyn (exp : expr) (env : Env.env) : Env.value =
     match exp with 
-    | Var _ -> raise (EvalError"something went wrong")
-    | Fun (v, e) -> Fun (v, e)
+    | Var x -> (try Env.lookup env x
+              with Not_found -> raise (EvalError "variable unbound"))
+    | Fun (v, e) -> Env.Val (Fun (v, e))
     | Let (x, d, b) -> 
-        let vd = Env.Val (eval_help d env) in
+        let vd = eval_help d env in
         let vb = eval_help b (Env.extend env x (ref vd)) in
         vb
     | Letrec (x, d, b) ->
       let x_ref = ref (Env.Val Unassigned) in
       let env_ext = Env.extend env x x_ref in 
-      let vd = Env.Val (eval_help d env_ext) in
+      let vd = eval_help d env_ext in
       x_ref := vd;
       eval_help b env_ext
     | App (p, q) -> 
-        (match eval_help p env with 
+        (match extract_val(eval_help p env) with 
         | Fun (x, b) ->
-          let vq = Env.Val (eval_help q env) in 
+          let vq = eval_help q env in 
           let env_ext = Env.extend env x (ref vq) in
           let vb = eval_help b env_ext in
           vb
         | _ -> raise (EvalError "app did not have a function"))
-      | _ -> raise (EvalError "something went wrong")
+      | _ -> print_string "line 292\n"; raise (EvalError "something went wrong")
 
-    and eval_diff_lex (exp : expr) (env : Env.env) : expr =
+    and eval_diff_lex (exp : expr) (env : Env.env) : Env.value =
       match exp with
-    | Var x -> extract_val (Env.lookup env x)
-    | Fun (x, p) -> extract_val (Closure (Fun (x,p), env))
+    | Var x -> Env.lookup env x
+    | Fun (x, p) -> Closure (Fun (x,p), env)
     | App (p, q) -> 
-        (match Env.Val (eval_help p env) with 
+          (match eval_help p env with 
         | Closure (Fun (x, b), env_l) ->
-            let vq = Env.Val (eval_help q env) in 
+            let vq = eval_help q env in 
             let env_ext = Env.extend env_l x (ref vq) in
             let vb = (eval_help b env_ext) in
             vb
         | _ -> 
             raise (EvalError "app did not have a function")) 
     | Let (x, d, b) -> 
-        let vd = Env.Val (eval_help d env) in
+        let vd = eval_help d env in
         let vb = eval_help b (Env.extend env x (ref vd)) in
         vb
     | Letrec (x, d, b) ->
-      let x_ref = ref (Env.Val Unassigned) in
-      let env_ext = Env.extend env x x_ref in 
-      let vd = Env.Val (eval_help d env_ext) in
-      x_ref := vd;
+        let x_ref = ref (Env.Val Unassigned) in
+        let env_ext = Env.extend env x x_ref in 
+        let vd = eval_help d env_ext in
+        x_ref := vd;
       eval_help b env_ext
-    | _ -> raise (EvalError "something went wrong")
+    | _ ->  print_string "line 317\n";raise (EvalError "something went wrong")
 
-    and eval_help (exp : expr) (env : Env.env) : expr =
+    and eval_help (exp : expr) (env : Env.env) : Env.value =
       match exp with 
-      | Num _ | Bool _ | Unop _ | Binop _ | Conditional _ 
+      | Num _ | Float _ | Bool _ | Unop _ | Binop _ | Conditional _ 
       | Raise | Unassigned -> eval_same exp env
       | _ -> 
         match Model.model with
@@ -325,128 +326,19 @@ struct
         | Lexical -> eval_diff_lex exp env
     
     let eval (exp : expr) (env : Env.env) : Env.value =
-      Env.Val (eval_help exp env)
+      eval_help exp env
 end
 
 module EvalLex = (EvalLexDyn (LexEval) : EVALTYPE)
 module EvalDyn = (EvalLexDyn (DynEval) : EVALTYPE)
-
-let eval_d = EvalDyn.eval
-let eval_l = EvalLex.eval
-
-
-(* function to get an expr from an Env.value *)
-let extract_val (v : Env.value) : expr =
-  match v with
-  | Val x -> x
-  | Closure (x, _) -> x ;;
-     
+    
 (* The DYNAMICALLY-SCOPED ENVIRONMENT MODEL evaluator -- to be
    completed *)
-   
-let rec eval_d (exp : expr) (env : Env.env) : Env.value =
-  (* evaluate d unops *)
-  let unop_eval_d (op : unop) (v : expr) : expr = 
-    match op, v with
-    | Negate, Num x -> Num (~-x)
-    | _, _ -> raise (EvalError "unop not an op")
-  in
-
-  (* to preserve expr -> expr *)
-  let eval_d_help (v : expr) (en : Env.env) : expr =
-    match v with
-    | Num x -> Num x
-    | Float x -> Float x
-    | Bool x -> Bool x
-    | Unop (x, y) -> unop_eval_d x (extract_val (eval_d y en))
-    | Binop (b, x, y) ->
-        (binop_eval b (extract_val (eval_d x en)) (extract_val (eval_d y en)))
-    | Conditional (i, t, e) -> 
-        (match extract_val (eval_d i en) with
-        | Bool x -> if x then extract_val (eval_d t en) 
-                    else extract_val (eval_d e en)
-        | _ -> raise (EvalError "bool not a conditional"))
-    | Fun (v, e) -> Fun (v, e)
-    | Let (x, d, b) | Letrec (x, d, b) ->
-      (* for dynamic semantics letrec works from the let rule *)
-        let vd = eval_d d en in
-        let vb = extract_val (eval_d b (Env.extend en x (ref vd))) in
-        vb
-    | Raise -> Raise
-    | Unassigned -> raise (EvalError "tried to evaluate unassigned")
-    | App (p, q) -> 
-        (match extract_val (eval_d p en) with 
-        | Fun (x, b) ->
-          let vq = eval_d q en in 
-          let env_ext = Env.extend en x (ref vq) in
-          let vb = extract_val (eval_d b env_ext) in
-          vb
-        | _ -> raise (EvalError "app did not have a function"))
-    | Var _ -> raise (EvalError"something went wrong")
-  in
-
-  match exp with 
-  | Var x -> (try (Env.lookup env x) 
-              with Not_found -> raise (EvalError "variable unbound"))
-  | _ -> Env.Val (eval_d_help exp env)
-  ;;
+  let eval_d = EvalDyn.eval
        
 (* The LEXICALLY-SCOPED ENVIRONMENT MODEL evaluator -- optionally
    completed as (part of) your extension *)
-   
-let rec eval_l (exp : expr) (env : Env.env) : Env.value =
-  (* evaluate l unops *)
-  let unop_eval_l (op : unop) (v : expr) : expr = 
-    match op, v with
-    | Negate, Num x -> Num (~-x)
-    | _, _ -> raise (EvalError "unop not an op")
-  in
-
-  (* handle all exp -> exp cases *)
-  let eval_l_help (v : expr) (en : Env.env) : expr =
-    match v with
-    | Num x -> Num x
-    | Float x -> Float x
-    | Bool x -> Bool x
-    | Unop (x, y) -> unop_eval_l x (extract_val (eval_l y en))
-    | Binop (b, x, y) -> 
-      (binop_eval b (extract_val (eval_l x en)) (extract_val (eval_l y en)))
-    | Conditional (i, t, e) ->
-         (match extract_val (eval_l i en) with
-        | Bool x -> if x then extract_val (eval_l t en) 
-                    else extract_val (eval_l e en)
-        | _ -> raise (EvalError "bool not a conditional"))
-    | Raise  -> Raise
-    | Unassigned -> raise (EvalError "tried to evaluate unassigned")
-    | _ -> raise (EvalError "something went wrong")
-  in
-
-  (* handle all exp -> Env.value cases *)
-  match exp with
-  | Var x -> Env.lookup env x
-  | Fun (x, p) -> Closure (Fun (x,p), env)
-  | App (p, q) -> 
-      (match eval_l p env with 
-      | Closure (Fun (x, b), env_l) ->
-          let vq = eval_l q env in 
-          let env_ext = Env.extend env_l x (ref vq) in
-          let vb = eval_l b env_ext in
-          vb
-      | _ -> 
-          raise (EvalError "app did not have a function")) 
-  | Let (x, d, b) -> 
-      let vd = eval_l d env in
-      let vb = eval_l b (Env.extend env x (ref vd)) in
-      vb
-  | Letrec (x, d, b) ->
-    let x_ref = ref (Env.Val Unassigned) in
-    let env_ext = Env.extend env x x_ref in 
-    let vd = eval_l d env_ext in
-    x_ref := vd;
-    eval_l b env_ext
-  | _ -> Env.Val (eval_l_help exp env)
-    ;;
-   
+  let eval_l = EvalLex.eval
 
 (* The EXTENDED evaluator -- if you want, you can provide your
    extension as a separate evaluator, or if it is type- and

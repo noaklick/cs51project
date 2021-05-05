@@ -193,15 +193,7 @@ let eval_d_test ()=
         eval_d x (Env.empty())
     in
 
-      (* DIFF FOR DYNAMIC!! 42 in sub and lex, doesn't work in dyn
-        this is a test i have to solve *)
-    (* let x = 10 in let f = fun y -> fun z -> z * (x + y) in f 11 2 *)
-    let _ = try (eval_d_help_test(str_to_exp 
-        "let x = 10 in let f = fun y -> fun z -> z * (x + y) in f 11 2;;)"))
-        with Evaluation.EvalError "variable unbound" -> 
-            print_string "variable unbound passed \n"; Evaluation.Env.Val (Raise)
-    in
-
+  
     (* 42 *)
      let test2 = str_to_exp 
         "42;;"
@@ -252,6 +244,15 @@ let eval_d_test ()=
     in 
     unit_test (test7 = str_to_exp "1;;")
         "eval_d intofbool7";
+
+    (* DIFF FOR DYNAMIC!! 42 in sub and lex, doesn't work in dyn
+        this is a test i have to solve *)
+    (* let x = 10 in let f = fun y -> fun z -> z * (x + y) in f 11 2 *)
+    let _ = try (eval_d_help_test(str_to_exp 
+        "let x = 10 in let f = fun y -> fun z -> z * (x + y) in f 11 2;;)"))
+        with Evaluation.EvalError "variable unbound" -> 
+            print_string "variable unbound passed \n"; Evaluation.Env.Val (Raise)
+    in
 
     (* !! let rec fact = fun n -> if n = 0 then 1 else n * fact (n-1) in fact 10 *)
     (* should return 3628800*)
