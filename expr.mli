@@ -17,9 +17,10 @@ type binop =
   | Plus
   | Minus
   | Times
+  | Divide                               (* added for extension *)
   | Equals
   | LessThan
-  | GreaterThan
+  | GreaterThan                          (* added for extension *)
 ;;
 
 (* Variable identifers *)

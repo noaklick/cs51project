@@ -5,7 +5,6 @@ Before OH:
 
  
 left to do:
-  writeup : lex, float, greater than
  
   
 done but need testing:

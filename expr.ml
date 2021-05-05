@@ -16,6 +16,7 @@ type binop =
   | Plus
   | Minus
   | Times
+  | Divide                               (* added for extension *)
   | Equals
   | LessThan
   | GreaterThan                          (* added for extension *)
@@ -168,6 +169,7 @@ let rec exp_to_concrete_string (exp : expr) : string =
       | Plus -> concrete_binop x y " + "
       | Minus -> concrete_binop x y " - "
       | Times -> concrete_binop x y " * "
+      | Divide -> concrete_binop x y " / "
       | Equals -> concrete_binop x y " = "
       | LessThan -> concrete_binop x y " < "
       | GreaterThan -> concrete_binop x y " > ") (* added for extension *)
@@ -224,6 +226,7 @@ let rec exp_to_abstract_string (exp : expr) : string =
       | Plus -> abstract_binop x y "Plus"
       | Minus -> abstract_binop x y "Minus"
       | Times -> abstract_binop x y "Times"
+      | Divide -> abstract_binop x y "Divide"
       | Equals -> abstract_binop x y "Equals"
       | LessThan-> abstract_binop x y "LessThan"
       | GreaterThan -> abstract_binop x y "GreaterThan")

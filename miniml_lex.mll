@@ -40,6 +40,7 @@
                        ("+", PLUS);
                        ("-", MINUS);
                        ("*", TIMES);
+                       ("/", DIVIDE);
                        ("(", OPEN);
                        (")", CLOSE)
                      ]

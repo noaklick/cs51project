@@ -144,6 +144,13 @@ let binop_eval  (op : binop) (v1 : expr) (v2 : expr) : expr =
     | Times, Float x1, Float x2 -> Float (x1 *. x2)
     | Times, _ , _ -> raise (EvalError "tried to multiply incompatible types")
 
+    (* divide *)
+    | Divide, Num _, Num 0 -> raise (EvalError "divide by zero")
+    | Divide, Num x1, Num x2 -> Num (x1 / x2)
+    | Divide, Float _, Float 0. -> raise (EvalError "divide by zero")
+    | Divide, Float x1, Float x2 -> Float (x1 /. x2)
+    | Divide, _ , _ -> raise (EvalError "tried to divide incompatible types")
+
     (* equals *)
     | Equals, Num x1, Num x2 -> Bool (x1 = x2)
     | Equals, Float x1, Float x2 -> Bool (x1 = x2)
@@ -158,8 +165,7 @@ let binop_eval  (op : binop) (v1 : expr) (v2 : expr) : expr =
     | GreaterThan, Num x1, Num x2 -> Bool (x1 > x2)
     | GreaterThan, Bool x1, Bool x2 -> Bool (x1 > x2)
     | GreaterThan, Float x1, Float x2 -> Bool (x1 > x2)
-    | _, _ , _ -> 
-        raise (EvalError "tried to compare incompatible types")
+    | _, _ , _ -> raise (EvalError "tried to compare incompatible types")
 
 let eval_s (exp : expr) (_env : Env.env) : Env.value =
 
@@ -167,6 +173,7 @@ let eval_s (exp : expr) (_env : Env.env) : Env.value =
   let unop_eval_s (op : unop) (v : expr) : expr = 
     match op, v with
     | Negate, Num x -> Num (~-x)
+    | Negate, Float x -> Float (~-.x)
     | _, _ -> raise (EvalError "unop not an op")
   in
 
@@ -238,6 +245,7 @@ struct
   let unop_eval (op : unop) (v : expr) : expr = 
   match op, v with
   | Negate, Num x -> Num (~-x)
+  | Negate, Float x ->Float (~-.x)
   | _, _ -> raise (EvalError "unop not an op")
 
   (* contains the evaluations that are the same in both *)
