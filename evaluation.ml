@@ -208,23 +208,14 @@ let extract_val (v : Env.value) : expr =
   | Val x -> x
   | Closure (x, _) -> x ;;
   
+(* for use in functor *)
 type model = Dynamic | Lexical
+
 module type MODEL =
 sig
   val model : model
 end
-(* something like tuple with fst snd
 
-global tuple.
-give functor the agency to choose based on a model
-so when it gets different, it calls lex or eval
-
-orrrr have a function take in an eval function
-gloval functions which is a var of (eval l, eval d)
-functor takes in choice
-pulls one of the things out of the tuple
-call eval d everywhere except int the differnet places
- *)
 module LexEval : MODEL =
 struct
    let model = Lexical
@@ -240,88 +231,91 @@ module type EVALTYPE =
     val eval :  expr -> Env.env -> Env.value
   end
 
+(* functor to create an eval function given a model of lexical or dynamic *)
 module EvalLexDyn (Model : MODEL) : EVALTYPE  = 
 struct
-  (* match the expr with certain things do x (the same) but
-  different follow the type *)
-   let unop_eval (op : unop) (v : expr) : expr = 
-    match op, v with
-    | Negate, Num x -> Num (~-x)
-    | _, _ -> raise (EvalError "unop not an op")
+  (* unop evaluation is the same in both *)
+  let unop_eval (op : unop) (v : expr) : expr = 
+  match op, v with
+  | Negate, Num x -> Num (~-x)
+  | _, _ -> raise (EvalError "unop not an op")
 
-    let rec eval_same (exp : expr) (env : Env.env) : Env.value = 
-      match exp with
-      | Num x -> Env.Val (Num x)
-      | Float x -> Env.Val (Float x)
-      | Bool x -> Env.Val (Bool x)
-      | Unop (x, y) -> Env.Val (unop_eval x (extract_val (eval_help y env)))
-      | Binop (b, x, y) ->
-          Env.Val (binop_eval b (extract_val (eval_help x env)) (extract_val (eval_help y env)))
-      | Conditional (i, t, e) -> 
-          (match extract_val (eval_help i env) with
-          | Bool x -> if x then eval_help t env else eval_help e env
-          | _ -> raise (EvalError "bool not a conditional"))
-      | Raise -> Env.Val Raise
-      | Unassigned -> raise (EvalError "tried to evaluate unassigned")
-      | _ -> print_string "line 266\n";raise (EvalError "something went wrong")
+  (* contains the evaluations that are the same in both *)
+  let rec eval_same (exp : expr) (env : Env.env) : Env.value = 
+    match exp with
+    | Num x -> Env.Val (Num x)
+    | Float x -> Env.Val (Float x)
+    | Bool x -> Env.Val (Bool x)
+    | Unop (x, y) -> Env.Val (unop_eval x (extract_val (eval_help y env)))
+    | Binop (b, x, y) ->
+        Env.Val (binop_eval b (extract_val (eval_help x env)) (extract_val (eval_help y env)))
+    | Conditional (i, t, e) -> 
+        (match extract_val (eval_help i env) with
+        | Bool x -> if x then eval_help t env else eval_help e env
+        | _ -> raise (EvalError "bool not a conditional"))
+    | Raise -> Env.Val Raise
+    | Unassigned -> raise (EvalError "tried to evaluate unassigned")
+    | _ -> raise (EvalError "something went wrong")
 
-
+    (* dynamic evaluation *)
     and eval_diff_dyn (exp : expr) (env : Env.env) : Env.value =
-    match exp with 
-    | Var x -> (try Env.lookup env x
-              with Not_found -> raise (EvalError "variable unbound"))
-    | Fun (v, e) -> Env.Val (Fun (v, e))
-    | Let (x, d, b) -> 
-        let vd = eval_help d env in
-        let vb = eval_help b (Env.extend env x (ref vd)) in
-        vb
-    | Letrec (x, d, b) ->
-      let x_ref = ref (Env.Val Unassigned) in
-      let env_ext = Env.extend env x x_ref in 
-      let vd = eval_help d env_ext in
-      x_ref := vd;
-      eval_help b env_ext
-    | App (p, q) -> 
-        (match extract_val(eval_help p env) with 
-        | Fun (x, b) ->
-          let vq = eval_help q env in 
-          let env_ext = Env.extend env x (ref vq) in
-          let vb = eval_help b env_ext in
+      match exp with 
+      | Var x -> (try Env.lookup env x
+                with Not_found -> raise (EvalError "variable unbound"))
+      | Fun (v, e) -> Env.Val (Fun (v, e))
+      | Let (x, d, b) -> 
+          let vd = eval_help d env in
+          let vb = eval_help b (Env.extend env x (ref vd)) in
           vb
-        | _ -> raise (EvalError "app did not have a function"))
-      | _ -> print_string "line 292\n"; raise (EvalError "something went wrong")
-
-    and eval_diff_lex (exp : expr) (env : Env.env) : Env.value =
-      match exp with
-    | Var x -> Env.lookup env x
-    | Fun (x, p) -> Closure (Fun (x,p), env)
-    | App (p, q) -> 
-          (match eval_help p env with 
-        | Closure (Fun (x, b), env_l) ->
-            let vq = eval_help q env in 
-            let env_ext = Env.extend env_l x (ref vq) in
-            let vb = (eval_help b env_ext) in
-            vb
-        | _ -> 
-            raise (EvalError "app did not have a function")) 
-    | Let (x, d, b) -> 
-        let vd = eval_help d env in
-        let vb = eval_help b (Env.extend env x (ref vd)) in
-        vb
-    | Letrec (x, d, b) ->
+      | Letrec (x, d, b) ->
         let x_ref = ref (Env.Val Unassigned) in
         let env_ext = Env.extend env x x_ref in 
         let vd = eval_help d env_ext in
         x_ref := vd;
-      eval_help b env_ext
-    | _ ->  print_string "line 317\n";raise (EvalError "something went wrong")
+        eval_help b env_ext
+      | App (p, q) -> 
+          (match extract_val(eval_help p env) with 
+          | Fun (x, b) ->
+            let vq = eval_help q env in 
+            let env_ext = Env.extend env x (ref vq) in
+            let vb = eval_help b env_ext in
+            vb
+          | _ -> raise (EvalError "app did not have a function"))
+        | _ -> raise (EvalError "something went wrong")
+
+    (* lexical evaluation *)
+    and eval_diff_lex (exp : expr) (env : Env.env) : Env.value =
+      match exp with
+      | Var x -> Env.lookup env x
+      | Fun (x, p) -> Closure (Fun (x,p), env)
+      | App (p, q) -> 
+            (match eval_help p env with 
+            | Closure (Fun (x, b), env_l) ->
+                let vq = eval_help q env in 
+                let env_ext = Env.extend env_l x (ref vq) in
+                let vb = (eval_help b env_ext) in
+                vb
+            | _ -> raise (EvalError "app did not have a function")) 
+      | Let (x, d, b) -> 
+          let vd = eval_help d env in
+          let vb = eval_help b (Env.extend env x (ref vd)) in
+          vb
+      | Letrec (x, d, b) ->
+          let x_ref = ref (Env.Val Unassigned) in
+          let env_ext = Env.extend env x x_ref in 
+          let vd = eval_help d env_ext in
+          x_ref := vd;
+        eval_help b env_ext
+      | _  -> raise (EvalError "something went wrong")
 
     and eval_help (exp : expr) (env : Env.env) : Env.value =
       match exp with 
+      (* for evaluations that are the same *)
       | Num _ | Float _ | Bool _ | Unop _ | Binop _ | Conditional _ 
       | Raise | Unassigned -> eval_same exp env
       | _ -> 
         match Model.model with
+        (* for evaluations which depend on model *)
         | Dynamic -> eval_diff_dyn exp env
         | Lexical -> eval_diff_lex exp env
     
@@ -329,6 +323,7 @@ struct
       eval_help exp env
 end
 
+(* modules for lexical and dynamic evaluation *)
 module EvalLex = (EvalLexDyn (LexEval) : EVALTYPE)
 module EvalDyn = (EvalLexDyn (DynEval) : EVALTYPE)
     
