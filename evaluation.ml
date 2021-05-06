@@ -90,7 +90,7 @@ module Env : ENV =
         | [] -> ""
         | (v, r) :: tl -> "{" ^ v ^ "->" ^ (value_to_string !r) ^ "}" ^ (list_to_string tl)
       in
-      "[" ^ list_to_string env ^ "]"
+      list_to_string env 
 
   end
 ;;

@@ -38,7 +38,7 @@ let repl () =
          printf "--> %s\n" (Ex.exp_to_abstract_string exp);
 
         (* EVALuate it *)
-        let res = Ev.evaluate exp env in
+        (* let res = Ev.evaluate exp env in *)
         let res_s = Ev.evaluate_s exp env in 
         let res_d = Ev.evaluate_d exp env in 
         let res_l = Ev.evaluate_l exp env in
@@ -47,13 +47,15 @@ let repl () =
            evaluator just returns the expression unchanged as an
            element of the `Env.value` type (found in `expr.ml`), so we
            just extract the expression back out and print it *)
-        match res, res_s, res_d, res_l with
-        | Val resexp,  Val s_resexp,  Val d_resexp,  Val l_resexp ->
+        match res_s, res_d, res_l with
+        |  Val s_resexp,  Val d_resexp,  Val l_resexp ->
            printf "s => %s\n" (Ex.exp_to_concrete_string s_resexp);
            printf "d => %s\n" (Ex.exp_to_concrete_string d_resexp);
            printf "l => %s\n" (Ex.exp_to_concrete_string l_resexp)
-           (* printf "==> %s\n" (Ex.exp_to_abstract_string resexp);
-           printf "==> %s\n" (Ex.exp_to_concrete_string resexp) *)
+        | Val s_resexp, Closure d_resexp, Closure l_resexp -> 
+           printf "s => %s\n" (Ev.Env.value_to_string (Val s_resexp));
+           printf "d => %s\n" (Ev.Env.value_to_string (Closure d_resexp));
+           printf "l => %s\n" (Ev.Env.value_to_string (Closure l_resexp))
         | _ -> failwith "not handling other cases yet"
 
         
