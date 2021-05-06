@@ -88,7 +88,8 @@ module Env : ENV =
       let rec list_to_string (e : env) : string =
         match e with
         | [] -> ""
-        | (v, r) :: tl -> "{" ^ v ^ "->" ^ (value_to_string !r) ^ "}" ^ (list_to_string tl)
+        | (v, r) :: tl -> 
+            "{" ^ v ^ "->" ^ (value_to_string !r) ^ "}" ^ (list_to_string tl)
       in
       list_to_string env 
 
