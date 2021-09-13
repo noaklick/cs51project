@@ -1,7 +1,7 @@
 
 ## project
 
-
+An interpreter to compile expressions written in OCaml using the substitution semantics model, dynamically scoped environmental model, and lexically scoped environmental model. Final Project for CS 51.
 
 This repository contains the project repository for Harvard's
 CS 51 class, Abstraction and Design in Computation.
